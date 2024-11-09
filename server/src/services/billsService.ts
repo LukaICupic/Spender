@@ -1,21 +1,65 @@
-import path from 'path';
-import fs from 'fs';
-import sharp from 'sharp';
-import { DecodeHintType, BarcodeFormat, BrowserMultiFormatReader } from '@zxing/library';
+import { Payee } from "../constants/Constants";
+import { PDF417UploadedModel } from "../models/bill";
 
-export const getBills = async () => {
+export const uploadBill = async (bill:any) => {
     try {
-        const imagePath = path.resolve(__dirname, '../testImg/testImg2.jpeg');
-
-        // hints
-        const hints = new Map();
-        const formats = [BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX, BarcodeFormat.PDF_417, BarcodeFormat.UPC_A];
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
-
-        const reader = new BrowserMultiFormatReader();
-        reader.decodeFromImage(imagePath);
+        // if(bill.format == BarcodeFormat.QR_CODE)
+        //     return await handleQRCode(correctedText)
+        if(bill.format == BarcodeFormat.PDF_417)
+            return await handlePDF417Code(bill.text)
     } catch (error) {
-        console.error('Error decoding the image:', error);
-        throw error; // Optional: rethrow or handle as needed
+        console.error('Error processing bill:', error);
+        throw error;
     }
 };
+
+const handleQRCode = async(content:string) => {
+
+}
+
+//Not sure that the lines will be always be at the right place and numbering 13?
+const handlePDF417Code = async(content:string) => {
+    try {
+        const lines = content.split('\n').map(line => line.trim());
+
+        console.log("lines", lines);
+        if(lines.length < 15 || lines.length > 15)
+            console.error('Number of lines is not 14 - PDF417')
+
+        const payeeName = lines[6];
+        const isPayeeValid = Object.values(Payee).includes(payeeName as Payee);
+
+        const bill: PDF417UploadedModel = {
+            category: isPayeeValid ? payeeName : undefined,
+            payee_name: payeeName,
+            amount: parseInt(lines[2], 10) / 100,
+            date_of_payment: new Date()
+          };
+
+          console.log("final bill", bill);
+          return bill;
+
+    } catch (error) {
+        
+    }
+}
+
+enum BarcodeFormat {
+    AZTEC = 0,
+    CODABAR = 1,
+    CODE_39 = 2,
+    CODE_93 = 3,
+    CODE_128 = 4,
+    DATA_MATRIX = 5,
+    EAN_8 = 6,
+    EAN_13 = 7,
+    ITF = 8,
+    MAXICODE = 9,
+    PDF_417 = 10,
+    QR_CODE = 11,
+    RSS_14 = 12,
+    RSS_EXPANDED = 13,
+    UPC_A = 14,
+    UPC_E = 15,
+    UPC_EAN_EXTENSION = 16
+}
