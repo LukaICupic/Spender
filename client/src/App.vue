@@ -3,9 +3,9 @@ import BillUploadView from './components/BillUploadView.vue'
 </script>
 
 <template>
-  <div>
+  <!-- <div>
     <header>My App</header>
     <router-view />
-  </div>
+  </div> -->
   <BillUploadView />
 </template>
