@@ -3,6 +3,7 @@ import { PDF417UploadedModel } from "../models/bill";
 
 export const uploadBill = async (bill:any) => {
     try {
+        console.log("bill", bill)
         // if(bill.format == BarcodeFormat.QR_CODE)
         //     return await handleQRCode(correctedText)
         if(bill.format == BarcodeFormat.PDF_417)
