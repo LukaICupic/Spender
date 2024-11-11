@@ -4,12 +4,15 @@ import {
   BrowserMultiFormatReader,
   DecodeHintType,
 } from '@zxing/library'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const categoryInput = ref<string | null>(null)
 const amountInput = ref<string | null>(null)
 const dateInput = ref<Date | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
+const fileUploadRef = ref<HTMLInputElement | null>(null)
+const categories = ref<{ text: string; value: string }[]>([])
+const selectedCategory = ref<string | null>(null)
 
 const reader = new BrowserMultiFormatReader()
 const hints = new Map<DecodeHintType, any>()
@@ -18,13 +21,39 @@ hints.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.PDF_417,
 ])
 
+onMounted(async () => {
+  try {
+    categories.value = await getBillCategories()
+    console.log('Categories fetched:', categories.value)
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+  }
+})
+
+const getBillCategories = async (): Promise<
+  { text: string; value: string }[]
+> => {
+  try {
+    const response = await fetch('http://localhost:5000/bills/categories') // Replace with actual API URL
+    if (!response.ok) {
+      throw new Error(`Failed to fetch categories: ${response.status}`)
+    }
+    const data = await response.json()
+    return data.data
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    return [] // Return an empty array in case of error
+  }
+}
+
+// Stat scanning
 const startScanner = async () => {
   try {
     await reader.decodeFromVideoDevice(null, videoRef.value, result => {
       if (result) {
         console.log('start scan result', result)
         processBillInfo(result.getText(), result.getBarcodeFormat())
-        stopScanner() // Stop scanning once barcode is read
+        stopScanner()
       }
     })
   } catch (error) {
@@ -32,6 +61,7 @@ const startScanner = async () => {
   }
 }
 
+// Stop scanning
 const stopScanner = async () => {
   try {
     reader.reset()
@@ -40,7 +70,7 @@ const stopScanner = async () => {
   }
 }
 
-// Handler for file input change
+// Process the sanned/uploaded bill
 const processBillInfo = async (
   decodedText: string,
   barcodeFormat: BarcodeFormat,
@@ -60,12 +90,43 @@ const processBillInfo = async (
 
     const result = await response.json()
 
-    categoryInput.value = result.data.category
-    amountInput.value = result.data.amount
-    dateInput.value = result.data.date_of_payment.split('T')[0]
+    categoryInput.value = result.data?.category
+    amountInput.value = result.data?.amount
+    dateInput.value = result.data.date_of_payment?.split('T')[0]
   } catch (error) {
     console.error('Error sending data to backend:', error)
   }
+}
+
+// Upload picture
+const handleFileUpload = () => {
+  if (
+    !fileUploadRef.value ||
+    !fileUploadRef.value.files ||
+    fileUploadRef.value.files.length === 0
+  )
+    return
+
+  const file = fileUploadRef.value.files[0]
+
+  const fReader = new FileReader()
+  fReader.onload = ev => {
+    const imageUrl = ev.target?.result as string
+
+    if (!imageUrl) return
+
+    reader
+      .decodeFromImageUrl(imageUrl)
+      .then(result => {
+        console.log(result.getText())
+        processBillInfo(result.getText(), result.getBarcodeFormat())
+      })
+      .catch(err => {
+        console.error('Error decoding barcode:', err)
+      })
+  }
+
+  fReader.readAsDataURL(file)
 }
 </script>
 
@@ -76,12 +137,23 @@ const processBillInfo = async (
 
     <video ref="videoRef" style="width: 100%; height: auto"></video>
 
-    <v-text-field
-      v-model="categoryInput"
-      label="Category / Payee Name"
+    <v-file-input
+      ref="fileUploadRef"
+      label="Upload Image"
+      @change="handleFileUpload"
+      accept="image/*"
       outlined
       dense
     />
+
+    <v-select
+      v-model="selectedCategory"
+      :items="categories"
+      label="Select a Category"
+      item-title="text"
+      item-value="value"
+    >
+    </v-select>
 
     <v-text-field
       v-model="amountInput"

@@ -11,4 +11,9 @@ export interface BillModel {
     amount: number;
     date_of_payment: Date;
   }
+
+  export interface QRUploadedModel {
+    amount: number;
+    date_of_payment: Date;
+  }
   

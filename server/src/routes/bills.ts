@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { uploadBill } from '../services/billsService';
+import { uploadBill, getBillCategories } from '../services/billsService';
 
 const router = express.Router();
 
@@ -11,6 +11,12 @@ router.post('/send-bill', async(req:Request, res:Response) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to process bill' });
     }
+})
+
+router.get('/categories', async (req:Request, res:Response) => {
+    const categories = await getBillCategories();
+    console.log("ccc",categories);
+    return res.status(200).json({ message: 'Bill processed successfully', data: categories });
 })
 
 export default router;
