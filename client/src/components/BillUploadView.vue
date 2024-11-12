@@ -34,7 +34,7 @@ const getBillCategories = async (): Promise<
   { text: string; value: string }[]
 > => {
   try {
-    const response = await fetch('http://localhost:5000/bills/categories') // Replace with actual API URL
+    const response = await fetch('http://localhost:5000/bills/categories')
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`)
     }
@@ -42,7 +42,7 @@ const getBillCategories = async (): Promise<
     return data.data
   } catch (error) {
     console.error('Error fetching categories:', error)
-    return [] // Return an empty array in case of error
+    return []
   }
 }
 

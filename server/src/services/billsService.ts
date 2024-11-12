@@ -31,15 +31,21 @@ const handleQRCode = async(content:string) => {
     try {
         const urlObj = new URL(content);
 
-        const dateTime = urlObj.searchParams.get('datv');
+        var dateTime = urlObj.searchParams.get('datv')?.split('_')[0];
+        var formatedDate = new Date();
+        if(dateTime){            
+            const year = parseInt(dateTime.slice(0, 4), 10);
+            const month = parseInt(dateTime.slice(4, 6), 10) - 1;
+            const day = parseInt(dateTime.slice(6, 8), 10);
+            formatedDate.setFullYear(year, month, day);
+        }
+
         const price = Number(urlObj.searchParams.get('izn'));
 
         const bill: QRUploadedModel = {
             amount: price / 100,
-            date_of_payment: new Date()
+            date_of_payment: formatedDate
         }
-
-        console.log("final bill", bill);
         return bill;
     } catch (error) {
         console.error('Error processing bill:', error);
