@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import {
-  BarcodeFormat,
-  BrowserMultiFormatReader,
-  DecodeHintType,
-} from '@zxing/library'
+import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser'
 import { ref, onMounted } from 'vue'
 
-const categoryInput = ref<string | null>(null)
 const amountInput = ref<string | null>(null)
 const dateInput = ref<Date | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
@@ -14,21 +9,37 @@ const fileUploadRef = ref<HTMLInputElement | null>(null)
 const categories = ref<{ text: string; value: string }[]>([])
 const selectedCategory = ref<string | null>(null)
 
-const reader = new BrowserMultiFormatReader()
-const hints = new Map<DecodeHintType, any>()
-hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-  BarcodeFormat.QR_CODE,
-  BarcodeFormat.PDF_417,
-])
+const codeReader = new BrowserMultiFormatReader()
 
 onMounted(async () => {
   try {
     categories.value = await getBillCategories()
-    console.log('Categories fetched:', categories.value)
   } catch (error) {
     console.error('Error fetching categories:', error)
   }
 })
+
+const handleBillsSaving = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/bills/save-bill', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify({
+        category: selectedCategory.value,
+        amount: amountInput.value,
+        date: dateInput.value,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`)
+    }
+  } catch (error) {
+    console.error('Error sending data to backend:', error)
+  }
+}
 
 const getBillCategories = async (): Promise<
   { text: string; value: string }[]
@@ -49,13 +60,23 @@ const getBillCategories = async (): Promise<
 // Stat scanning
 const startScanner = async () => {
   try {
-    await reader.decodeFromVideoDevice(null, videoRef.value, result => {
-      if (result) {
-        console.log('start scan result', result)
-        processBillInfo(result.getText(), result.getBarcodeFormat())
-        stopScanner()
-      }
-    })
+    const videoInputDevices =
+      await BrowserMultiFormatReader.listVideoInputDevices()
+    const selectedDeviceId = videoInputDevices[0].deviceId
+    const previewElem = videoRef.value
+
+    if (previewElem) {
+      const controls = await codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
+        previewElem,
+        result => {
+          if (result) {
+            console.log('Scan result:', result.getText())
+            processBillInfo(result.getText(), result.getBarcodeFormat())
+          }
+        },
+      )
+    }
   } catch (error) {
     console.error('Error starting camera scanner:', error)
   }
@@ -63,10 +84,8 @@ const startScanner = async () => {
 
 // Stop scanning
 const stopScanner = async () => {
-  try {
-    reader.reset()
-  } catch (error) {
-    console.error('Error stopping camera scanner:', error)
+  if (videoRef.value) {
+    videoRef.value.srcObject = null
   }
 }
 
@@ -81,7 +100,7 @@ const processBillInfo = async (
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
       },
-      body: JSON.stringify({ text: decodedText, format: barcodeFormat }), // Sending the decoded text as JSON
+      body: JSON.stringify({ text: decodedText, format: barcodeFormat }),
     })
 
     if (!response.ok) {
@@ -90,7 +109,7 @@ const processBillInfo = async (
 
     const result = await response.json()
 
-    categoryInput.value = result.data?.category
+    if (result.data?.category) selectedCategory.value = result.data?.category
     amountInput.value = result.data?.amount
     dateInput.value = result.data.date_of_payment?.split('T')[0]
   } catch (error) {
@@ -99,7 +118,7 @@ const processBillInfo = async (
 }
 
 // Upload picture
-const handleFileUpload = () => {
+const handleFileUpload = async () => {
   if (
     !fileUploadRef.value ||
     !fileUploadRef.value.files ||
@@ -110,23 +129,30 @@ const handleFileUpload = () => {
   const file = fileUploadRef.value.files[0]
 
   const fReader = new FileReader()
-  fReader.onload = ev => {
-    const imageUrl = ev.target?.result as string
 
-    if (!imageUrl) return
+  try {
+    const imageUrl = await new Promise<string>((resolve, reject) => {
+      fReader.onload = ev => {
+        const imageUrl = ev.target?.result as string
+        if (imageUrl) {
+          resolve(imageUrl)
+        } else {
+          reject(new Error('Failed to read image file'))
+        }
+      }
 
-    reader
-      .decodeFromImageUrl(imageUrl)
-      .then(result => {
-        console.log(result.getText())
-        processBillInfo(result.getText(), result.getBarcodeFormat())
-      })
-      .catch(err => {
-        console.error('Error decoding barcode:', err)
-      })
+      fReader.onerror = () => {
+        reject(new Error('Error reading the file'))
+      }
+
+      fReader.readAsDataURL(file)
+    })
+
+    const result = await codeReader.decodeFromImageUrl(imageUrl)
+    processBillInfo(result.getText(), result.getBarcodeFormat())
+  } catch (error) {
+    console.error('Error decoding barcode from image:', error)
   }
-
-  fReader.readAsDataURL(file)
 }
 </script>
 
@@ -170,6 +196,8 @@ const handleFileUpload = () => {
       outlined
       dense
     />
+
+    <v-btn color="primary" @click="handleBillsSaving">Save</v-btn>
   </v-container>
 </template>
 

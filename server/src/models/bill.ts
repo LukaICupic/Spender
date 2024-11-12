@@ -1,13 +1,13 @@
+import { ReceiptCategory } from "../constants/Constants";
+
 export interface BillModel {
     category: string;
-    payee_name: string;
     amount: number;
     date_of_payment: Date;
   }
 
   export interface PDF417UploadedModel {
-    category?: string;
-    payee_name?: string;
+    category?: ReceiptCategory | null;
     amount: number;
     date_of_payment: Date;
   }
