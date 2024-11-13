@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BillsCategoryDto } from '@/dtos/bills'
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser'
 import { ref, onMounted } from 'vue'
 
@@ -29,7 +30,7 @@ const handleBillsSaving = async () => {
       body: JSON.stringify({
         category: selectedCategory.value,
         amount: amountInput.value,
-        date: dateInput.value,
+        date: dateInput.value ? new Date(dateInput.value) : null,
       }),
     })
 
@@ -41,15 +42,11 @@ const handleBillsSaving = async () => {
   }
 }
 
-const getBillCategories = async (): Promise<
-  { text: string; value: string }[]
-> => {
+const getBillCategories = async (): Promise<BillsCategoryDto[]> => {
   try {
     const response = await fetch('http://localhost:5000/bills/categories')
-    if (!response.ok) {
-      throw new Error(`Failed to fetch categories: ${response.status}`)
-    }
-    const data = await response.json()
+
+    const data: { data: BillsCategoryDto[] } = await response.json()
     return data.data
   } catch (error) {
     console.error('Error fetching categories:', error)
@@ -66,12 +63,11 @@ const startScanner = async () => {
     const previewElem = videoRef.value
 
     if (previewElem) {
-      const controls = await codeReader.decodeFromVideoDevice(
+      await codeReader.decodeFromVideoDevice(
         selectedDeviceId,
         previewElem,
         result => {
           if (result) {
-            console.log('Scan result:', result.getText())
             processBillInfo(result.getText(), result.getBarcodeFormat())
           }
         },
@@ -100,7 +96,7 @@ const processBillInfo = async (
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
       },
-      body: JSON.stringify({ text: decodedText, format: barcodeFormat }),
+      body: JSON.stringify({ content: decodedText, format: barcodeFormat }),
     })
 
     if (!response.ok) {

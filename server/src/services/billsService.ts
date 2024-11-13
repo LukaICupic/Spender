@@ -1,40 +1,43 @@
 import { Bill_Payment_Payee, BarcodeFormat, ReceiptCategory } from "../constants/Constants";
-import { PDF417UploadedModel, QRUploadedModel } from "../models/bill";
+import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel } from "../models/dtos/bill";
 import {db} from '../db/index';
-import {billsTable} from '../db/schema';
+import {billsModel} from '../db/schema';
 
-export const saveBill = async(bill:any) => {
+export const saveBill = async(bill:CreateBillDto) => {
     try {
-        type NewBill = typeof billsTable.$inferInsert;
+        bill.payer = "gramAna"
+        const validateBill = createBill.safeParse(bill);
 
-        var newBill: NewBill = {
-            category: bill.category,
-            amount: bill.amount,
-            payer: "",
-            date_of_payment: new Date(bill.date)
-        }
+        if (!validateBill.success) {
+            console.error('Validation failed:', validateBill.error);
+            throw new Error('Invalid bill data');
+          }
 
-        await db.insert(billsTable).values(newBill);
+        return await db.insert(billsModel).values(validateBill.data);
     } catch (error) {
         console.error('Error processing bill:', error);
     }
 }
 
-export const uploadBill = async (bill:any) => {
+export const uploadBill = async (bill:UploadBillDto):Promise<QRUploadedDto | PDF417UploadedDto> => {
     try {
-        if(bill.format == BarcodeFormat.QR_CODE)
-            return await handleQRCode(bill.text)
-        if(bill.format == BarcodeFormat.PDF_417)
-            return await handlePDF417Code(bill.text)
+        const validateBill = uploaBill.parse(bill);
+
+        if(validateBill.format == BarcodeFormat.QR_CODE)
+            return await handleQRCode(validateBill.content)
+        if(validateBill.format == BarcodeFormat.PDF_417)
+            return await handlePDF417Code(validateBill.content)
+
+        throw new Error('Unsupported barcode format');
     } catch (error) {
         console.error('Error processing bill:', error);
         throw error;
     }
 };
 
-export const getBillCategories = async() => {
+export const getBillCategories = async(): Promise<BillsCategoryModel[]> => {
     try {
-        const categories = Object.entries(ReceiptCategory).map(([key, value]) => ({
+        const categories: BillsCategoryModel[] = Object.entries(ReceiptCategory).map(([key, value]) => ({
             text: value,
             value: key,
         }));
@@ -45,19 +48,16 @@ export const getBillCategories = async() => {
     }
 }
 
-const handleQRCode = async(content:string) => {
+const handleQRCode = async(content:string) : Promise<QRUploadedDto> => {
     try {
         const urlObj = new URL(content);
-        console.log("url", urlObj);
         var dateTime = urlObj.searchParams.get('datv')?.split('_')[0];
-        console.log("date",dateTime)
         var formatedDate = new Date();
         if(dateTime){            
             const year = parseInt(dateTime.slice(0, 4), 10);
             const month = parseInt(dateTime.slice(4, 6), 10) - 1;
             const day = parseInt(dateTime.slice(6, 8), 10);
             formatedDate.setFullYear(year, month, day);
-            console.log("formatedDate1", formatedDate)
         }
 
         // Handle 'izn' parameter with flexible parsing
@@ -68,20 +68,19 @@ const handleQRCode = async(content:string) => {
         else
             price = Number(iznValue) / 100;
 
-        console.log("priceee",price)
-        const bill: QRUploadedModel = {
+        const bill: QRUploadedDto = {
             amount: price,
             date_of_payment: formatedDate
         }
-        console.log("QR-bill", bill)
         return bill;
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error processing bill:', error);
+        throw new Error(`Failed to process QR code: ${error.message}`);
     }
 }
 
 //Not sure that the lines will be always be at the right place and numbering 13?
-const handlePDF417Code = async(content:string) => {
+const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
     try {
         const lines = content.split('\n').map(line => line.trim());
 
@@ -91,7 +90,7 @@ const handlePDF417Code = async(content:string) => {
         const payeeName = lines[6];
         const categoryFound = findCategory(payeeName);
 
-        const bill: PDF417UploadedModel = {
+        const bill: PDF417UploadedDto = {
             category: categoryFound,
             amount: parseInt(lines[2], 10) / 100,
             date_of_payment: new Date()
@@ -99,8 +98,9 @@ const handlePDF417Code = async(content:string) => {
 
           return bill;
 
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error processing bill:', error);
+        throw new Error(`Failed to process QR code: ${error.message}`);
     }
 }
 
