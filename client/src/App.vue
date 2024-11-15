@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import BillUploadView from './components/BillUploadView.vue'
+import { computed } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import DefaultLayout from '@/layouts/DefaultLayout.vue'
+
+const route = useRoute()
+
+// Dynamically resolve the layout
+const Layout = computed(() => {
+  return route.meta.layout || DefaultLayout
+})
 </script>
 
 <template>
-  <!-- <div>
-    <header>My App</header>
+  <component :is="Layout">
     <router-view />
-  </div> -->
-  <BillUploadView />
+  </component>
 </template>

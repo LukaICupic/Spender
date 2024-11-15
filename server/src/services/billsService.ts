@@ -14,8 +14,9 @@ export const saveBill = async(bill:CreateBillDto) => {
           }
 
         return await db.insert(billsModel).values(validateBill.data);
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error processing bill:', error);
+        throw new Error(`Error processing bill: ${error.message}`);
     }
 }
 
@@ -29,9 +30,9 @@ export const uploadBill = async (bill:UploadBillDto):Promise<QRUploadedDto | PDF
             return await handlePDF417Code(validateBill.content)
 
         throw new Error('Unsupported barcode format');
-    } catch (error) {
+    } catch (error:any) {
         console.error('Error processing bill:', error);
-        throw error;
+        throw new Error(`Error processing bill: ${error.message}`);
     }
 };
 
@@ -42,9 +43,9 @@ export const getBillCategories = async(): Promise<BillsCategoryModel[]> => {
             value: key,
         }));
         return categories;
-    } catch (error) {
-        console.error("Error generating categories:", error);
-        return [];
+    } catch (error:any) {
+        console.error('Error generating categories:', error);
+        throw new Error(`Error generating categories: ${error.message}`);
     }
 }
 
@@ -74,7 +75,7 @@ const handleQRCode = async(content:string) : Promise<QRUploadedDto> => {
         }
         return bill;
     } catch (error:any) {
-        console.error('Error processing bill:', error);
+        console.error('Failed to process QR code', error);
         throw new Error(`Failed to process QR code: ${error.message}`);
     }
 }
@@ -100,7 +101,7 @@ const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
 
     } catch (error:any) {
         console.error('Error processing bill:', error);
-        throw new Error(`Failed to process QR code: ${error.message}`);
+        throw new Error(`Failed to process PDF417: ${error.message}`);
     }
 }
 

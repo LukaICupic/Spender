@@ -16,7 +16,7 @@
     "@zxing/browser": "^0.1.5",
     "vue": "^3.5.11",
     "vue-router": "^4.4.5",
-    "vuetify": "^3.1.0"
+    "vuetify": "^3.7.4"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",

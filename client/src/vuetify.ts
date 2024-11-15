@@ -1,26 +1,59 @@
-// src/plugins/vuetify.ts
 import { createVuetify } from 'vuetify'
-import 'vuetify/styles' // Import Vuetify styles
+import 'vuetify/styles'
+import { fa } from 'vuetify/iconsets/fa'
+import '@fortawesome/fontawesome-free/css/all.css'
+
 import {
+  VApp,
+  VAppBar,
   VFileInput,
+  VNavigationDrawer,
+  VList,
+  VListItem,
+  VDivider,
+  VMain,
+  VLayout,
+  VCard,
+  VToolbar,
+  VToolbarTitle,
+  VIcon,
+  VBtn,
   VTextField,
   VContainer,
-  VBtn,
-  VInput,
   VSelect,
-} from 'vuetify/components' // Import VFileInput
+  VImg,
+  VSpacer,
+} from 'vuetify/components'
 
-// Create and export the Vuetify instance
 export default createVuetify({
   components: {
-    VSelect,
-    VInput,
+    VApp,
+    VAppBar,
+    VFileInput,
+    VNavigationDrawer,
+    VList,
+    VListItem,
+    VDivider,
+    VMain,
+    VLayout,
+    VCard,
+    VToolbar,
+    VToolbarTitle,
+    VIcon,
     VBtn,
+    VTextField,
     VContainer,
-    VTextField, // Register VTextField
-    VFileInput, // Register VFileInput explicitly
+    VSelect,
+    VImg,
+    VSpacer,
   },
   theme: {
     defaultTheme: 'light',
+  },
+  icons: {
+    defaultSet: 'fa', // Use MDI as the default set
+    sets: {
+      fa, // Add FontAwesome icons
+    },
   },
 })

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { BillsCategoryDto } from '@/dtos/bills'
+import type {
+  BillResponseDto,
+  CategoryDto,
+  CategoryResponseDto,
+} from '@/dtos/bills'
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser'
 import { ref, onMounted } from 'vue'
 
@@ -34,20 +38,28 @@ const handleBillsSaving = async () => {
       }),
     })
 
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`)
+    const responseData: BillResponseDto = await response.json()
+    if (responseData.error) {
+      console.error(`Server error: ${responseData.error}`)
     }
+
+    console.log('Message for user:', responseData.message)
   } catch (error) {
     console.error('Error sending data to backend:', error)
   }
 }
 
-const getBillCategories = async (): Promise<BillsCategoryDto[]> => {
+const getBillCategories = async (): Promise<CategoryDto[]> => {
   try {
     const response = await fetch('http://localhost:5000/bills/categories')
 
-    const data: { data: BillsCategoryDto[] } = await response.json()
-    return data.data
+    const responseData: CategoryResponseDto = await response.json()
+
+    if (responseData.error) {
+      console.error(`Server error: ${responseData.error}`)
+    }
+
+    return responseData?.data ?? []
   } catch (error) {
     console.error('Error fetching categories:', error)
     return []
