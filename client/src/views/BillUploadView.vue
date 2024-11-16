@@ -166,11 +166,10 @@ const handleFileUpload = async () => {
 
 <template>
   <v-container>
-    <v-btn color="primary" @click="startScanner">Start Scanning</v-btn>
-    <v-btn color="error" @click="stopScanner">Stop Scanning</v-btn>
-
     <video ref="videoRef" style="width: 100%; height: auto"></video>
 
+    <v-btn color="primary" @click="startScanner">Start Scanning</v-btn>
+    <v-btn color="error" @click="stopScanner">Stop Scanning</v-btn>
     <v-file-input
       ref="fileUploadRef"
       label="Upload Image"

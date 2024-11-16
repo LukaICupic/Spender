@@ -1,9 +1,11 @@
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import { fa } from 'vuetify/iconsets/fa'
-import '@fortawesome/fontawesome-free/css/all.css'
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
 import {
+  VTooltip,
+  VRow,
+  VCol,
   VApp,
   VAppBar,
   VFileInput,
@@ -27,6 +29,9 @@ import {
 
 export default createVuetify({
   components: {
+    VTooltip,
+    VRow,
+    VCol,
     VApp,
     VAppBar,
     VFileInput,
@@ -51,9 +56,10 @@ export default createVuetify({
     defaultTheme: 'light',
   },
   icons: {
-    defaultSet: 'fa', // Use MDI as the default set
+    defaultSet: 'mdi',
+    aliases,
     sets: {
-      fa, // Add FontAwesome icons
+      mdi,
     },
   },
 })

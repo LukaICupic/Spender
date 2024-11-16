@@ -1,46 +1,66 @@
 <script lang="ts">
+import { mdiMenu } from '@mdi/js'
+import { ref, computed } from 'vue'
+import { useDisplay } from 'vuetify'
+import { useRouter } from 'vue-router'
+
 export default {
-  data() {
+  setup() {
+    const drawer = ref(true)
+    const { mdAndUp } = useDisplay()
+    const isPermanent = computed(() => mdAndUp.value)
+    const router = useRouter()
     return {
-      drawer: false, // Controls the open/close state of the navigation drawer
+      drawer,
+      isPermanent,
+      router,
     }
   },
 }
 </script>
-
 <template>
-  <v-app class="grey lighten-4">
-    <!-- Main Toolbar always on top -->
-    <v-toolbar app dark class="indigo">
-      <v-btn icon @click="drawer = !drawer">
-        <!-- Button to toggle drawer -->
-        <v-icon>
-          <span>aaaaaa</span>
-        </v-icon>
-        <!-- Material Design Menu Icon -->
+  <v-app>
+    <!-- Main Toolbar -->
+    <v-toolbar
+      dark
+      :class="isPermanent ? 'toolbar-with-drawer' : ''"
+      style="background-color: white; height: 38px"
+    >
+      <v-btn icon v-if="!isPermanent" @click="drawer = !drawer">
+        <v-icon icon="mdi-menu" />
       </v-btn>
-      <v-toolbar-title class="headline text-uppercase">
-        <span>Title of Application</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
     </v-toolbar>
 
-    <!-- Navigation Drawer on the left -->
-    <v-navigation-drawer
-      v-model="drawer"
-      app
-      style="background-color: blue"
-      scrim
-    >
+    <!-- Navigation Drawer -->
+    <v-navigation-drawer v-model="drawer" app :permanent="isPermanent" rail>
       <v-list>
-        <v-list-item>
-          <v-icon left>mdi-home</v-icon>
-          <span>Home</span>
+        <v-list-item href="/">
+          <v-img
+            src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.freebiesupply.com%2Flogos%2Flarge%2F2x%2Fvue-9-logo-png-transparent.png&f=1&nofb=1&ipt=de5dc0f638f1edb2cca688b5eedb895bba78111db84b3ea20793e37d511d3344&ipo=images"
+            alt="Logo"
+            max-width="30"
+          />
         </v-list-item>
-        <v-list-item>
-          <v-icon left>mdi-information</v-icon>
-          <span>About</span>
-        </v-list-item>
+        <v-divider></v-divider>
+        <v-list density="compact" nav>
+          <v-list-item
+            to="/"
+            prepend-icon="mdi-home"
+            title="Home"
+            value="Home"
+          />
+          <v-list-item
+            to="/about"
+            prepend-icon="mdi-receipt-text-plus"
+            title="About"
+            value="About"
+          />
+          <v-list-item
+            prepend-icon="mdi-star"
+            title="Statistics"
+            value="Statistics"
+          />
+        </v-list>
       </v-list>
     </v-navigation-drawer>
 
@@ -50,7 +70,9 @@ export default {
     </v-main>
   </v-app>
 </template>
-
 <style>
-/* Optional: Adjust padding/margins if necessary */
+.toolbar-with-drawer {
+  margin-left: 256px;
+  width: calc(100% - 256px);
+}
 </style>
