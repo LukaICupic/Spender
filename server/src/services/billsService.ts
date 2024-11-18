@@ -105,9 +105,11 @@ const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
     }
 }
 
-const findCategory = (category:string): ReceiptCategory | null => {
+const findCategory = (category:string): string | null => {
     if (Object.values(Bill_Payment_Payee).includes(category as Bill_Payment_Payee)) {
-        return ReceiptCategory.BILL_PAYMENT;
+        const indexOfS = Object.values(ReceiptCategory).indexOf(ReceiptCategory.BILL_PAYMENT as unknown as ReceiptCategory);
+        const key = Object.keys(ReceiptCategory)[indexOfS];
+        return key;
     }
     return null;
 } 

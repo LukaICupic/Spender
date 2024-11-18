@@ -3,6 +3,7 @@ import 'vuetify/styles'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
 import {
+  VAlert,
   VTooltip,
   VRow,
   VCol,
@@ -29,6 +30,7 @@ import {
 
 export default createVuetify({
   components: {
+    VAlert,
     VTooltip,
     VRow,
     VCol,

@@ -1,5 +1,4 @@
 <script lang="ts">
-import { mdiMenu } from '@mdi/js'
 import { ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useRouter } from 'vue-router'

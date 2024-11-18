@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ReceiptCategory } from "../../constants/Constants";
 
   export interface PDF417UploadedDto {
-    category?: ReceiptCategory | null;
+    category?: string | null;
     amount: number;
     date_of_payment: Date;
   }
