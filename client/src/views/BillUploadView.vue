@@ -1,19 +1,39 @@
 <script setup lang="ts">
-import type {
-  BillResponseDto,
-  CategoryDto,
-  CategoryResponseDto,
-  UploadBillDto,
-} from '@/dtos/bills'
+import type { BillResponseDto, UploadBillDto } from '@/dtos/bills'
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import type { VForm } from 'vuetify/components'
+import CategorySelect from '@/components/CategorySelect.vue'
 
-const amountInput = ref<number | undefined>()
+const amountInput = ref<number>()
 const dateInput = ref<string | undefined>()
+const selectedCategory = ref<string | undefined>(undefined)
+const form = ref<VForm | null>(null)
+
+const amountRules = [
+  (value: any) => {
+    if (value === undefined || value === 0) {
+      return 'Amount is required.'
+    }
+    if (value < 0) {
+      return 'Amount must be a positive number.'
+    }
+    return true
+  },
+]
+
+const dateRules = [
+  (value: any) => {
+    if (value === undefined || value === null || value === '') {
+      return 'Date is required.'
+    }
+    return true
+  },
+]
+
 const videoRef = ref<HTMLVideoElement | null>(null)
 const fileUploadRef = ref<HTMLInputElement | null>(null)
-const categories = ref<{ text: string; value: string }[] | undefined>([])
-const selectedCategory = ref<string | null>(null)
+
 const messageAlert = ref<boolean>(false)
 const messageType = ref<'success' | 'info' | 'warning' | 'error'>('success')
 const messageContent = ref<string | null>(null)
@@ -21,53 +41,32 @@ const scanningMode = ref<boolean>(false)
 
 const codeReader = new BrowserMultiFormatReader()
 
-onMounted(async () => {
-  try {
-    categories.value = await getBillCategories()
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-  }
-})
-
 const handleBillsSaving = async () => {
-  const response = await fetch('http://localhost:5000/bills/save-bill', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-    },
-    body: JSON.stringify({
-      category: selectedCategory.value,
-      amount: amountInput.value,
-      date: dateInput.value ? new Date(dateInput.value) : null,
-    }),
-  })
+  if ((await form.value?.validate())?.valid) {
+    const response = await fetch('http://localhost:5000/bills/save-bill', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify({
+        category: selectedCategory.value,
+        amount: amountInput.value,
+        date: dateInput.value ? new Date(dateInput.value) : null,
+      }),
+    })
 
-  const responseData: BillResponseDto = await response.json()
-  messageAlert.value = true
-  if (responseData.error) {
-    messageType.value = 'warning'
+    const responseData: BillResponseDto = await response.json()
     messageAlert.value = true
-    messageContent.value = `${responseData.error}`
-  } else {
-    messageType.value = 'success'
-    messageContent.value = `${responseData.message}`
-  }
-}
-
-const getBillCategories = async (): Promise<CategoryDto[] | undefined> => {
-  try {
-    const response = await fetch('http://localhost:5000/bills/categories')
-
-    const responseData: CategoryResponseDto = await response.json()
-
     if (responseData.error) {
       messageType.value = 'warning'
       messageAlert.value = true
       messageContent.value = `${responseData.error}`
-      return []
-    } else return responseData?.data ?? []
-  } catch (error) {
-    console.error('Error fetching categories:', error)
+    } else {
+      messageType.value = 'success'
+      messageContent.value = `${responseData.message}`
+
+      selectedCategory.value = dateInput.value = amountInput.value = undefined
+    }
   }
 }
 
@@ -122,12 +121,14 @@ const processBillInfo = async (
       messageType.value = 'warning'
       messageAlert.value = true
       messageContent.value = `${responseData.error}`
+      return
     }
 
     if (responseData.data?.category)
       selectedCategory.value = responseData.data?.category
 
-    amountInput.value = responseData.data?.amount
+    amountInput.value = responseData.data.amount
+
     const formattedDate = new Date(responseData.data?.date_of_payment ?? '')
       .toISOString()
       .split('T')[0]
@@ -145,9 +146,7 @@ const handleFileUpload = async () => {
     fileUploadRef.value.files.length === 0
   )
     return
-
   const file = fileUploadRef.value.files[0]
-
   const fReader = new FileReader()
 
   try {
@@ -178,6 +177,10 @@ const handleFileUpload = async () => {
 const triggerFileInput = () => {
   const fileInput = fileUploadRef.value
   if (fileInput) fileInput.click() // Triggers the file input dialog
+}
+
+const onCategorySelected = (newCategory: string | undefined) => {
+  selectedCategory.value = newCategory
 }
 </script>
 
@@ -238,30 +241,34 @@ const triggerFileInput = () => {
     >
 
     <!-- Category and Form Fields -->
-    <v-select
-      v-model="selectedCategory"
-      :items="categories"
-      label="Select a Category"
-      item-title="text"
-      item-value="value"
-    />
+    <v-sheet class="mx-auto">
+      <v-form ref="form" fast-fail @submit.prevent="handleBillsSaving">
+        <CategorySelect
+          :foundCategory="selectedCategory"
+          @update:category="onCategorySelected"
+          context="BillUpload"
+        />
 
-    <v-text-field
-      v-model="amountInput"
-      label="Amount"
-      type="number"
-      outlined
-      dense
-    />
+        <v-text-field
+          v-model.number="amountInput"
+          label="Amount"
+          type="number"
+          outlined
+          dense
+          :rules="amountRules"
+        />
 
-    <v-text-field
-      v-model="dateInput"
-      label="Date of Payment"
-      type="date"
-      outlined
-      dense
-    />
-    <v-btn block color="secondary" @click="handleBillsSaving">Save</v-btn>
+        <v-text-field
+          v-model="dateInput"
+          label="Date of Payment"
+          type="date"
+          outlined
+          dense
+          :rules="dateRules"
+        />
+        <v-btn block color="secondary" type="submit">Save</v-btn>
+      </v-form>
+    </v-sheet>
   </v-container>
 </template>
 

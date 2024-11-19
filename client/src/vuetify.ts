@@ -3,6 +3,9 @@ import 'vuetify/styles'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 
 import {
+  VDatePicker,
+  VSheet,
+  VForm,
   VAlert,
   VTooltip,
   VRow,
@@ -30,6 +33,9 @@ import {
 
 export default createVuetify({
   components: {
+    VDatePicker,
+    VSheet,
+    VForm,
     VAlert,
     VTooltip,
     VRow,

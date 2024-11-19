@@ -1,14 +1,14 @@
 import express, { Request, Response } from 'express';
 import { saveBill, uploadBill, getBillCategories } from '../services/billsService';
-import { BillsCategoryModel, PDF417UploadedDto, QRUploadedDto } from '../models/dtos/bill';
+import { BillSavedDto, BillsCategoryModel, PDF417UploadedDto, QRUploadedDto } from '../models/dtos/bill';
 
 const router = express.Router();
 
 //Get bills
-router.post('/save-bill', async(req:Request, res:Response) => {
+router.post('/save-bill', async(req:Request, res:Response<BillSavedDto>) => {
     try {
-        await saveBill(req.body);  
-        res.status(200);
+        await saveBill(req.body);
+        res.status(200).json({message:'Bill saved successfully'});
     } catch (error: any) {
         console.error('Error saving bill:', error);
         res.status(500).json({ error: error instanceof  Error ? error.message :  'Internal Server Error' });

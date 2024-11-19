@@ -18,7 +18,7 @@ export interface CategoriesResponseDto {
 }
 
 export interface UploadBillDto {
-  data?: QRUploadedDto | PDF417UploadedDto
+  data: QRUploadedDto | PDF417UploadedDto
   error?: string
 }
 

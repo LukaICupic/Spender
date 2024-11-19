@@ -17,6 +17,11 @@ import { ReceiptCategory } from "../../constants/Constants";
     value: string;
   }
 
+  export interface BillSavedDto {
+  message?:string,
+  error?:string
+  }
+
 const [firstKey, ...otherKeys] = Object.keys(ReceiptCategory).filter(key => isNaN(Number(key))) as (keyof typeof ReceiptCategory)[];
 
 export const createBill = z.object({
