@@ -1,7 +1,8 @@
 import { Bill_Payment_Payee, BarcodeFormat, ReceiptCategory } from "../constants/Constants";
-import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel } from "../models/dtos/bill";
+import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType } from "../models/dtos/bill";
 import {db} from '../db/index';
 import {billsModel} from '../db/schema';
+import { SQL, and, gte, lte, inArray, sql} from "drizzle-orm";
 
 export const saveBill = async(bill:CreateBillDto) => {
     try {
@@ -114,3 +115,42 @@ const findCategory = (category:string): string | null => {
     return null;
 } 
 
+export const filterBills = async (filter:FilterDto) => {    
+    const filters: SQL[] = [];
+    let groupByDate: SQL | null = null;
+    if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0) {
+        filters.push(inArray(billsModel.category, filter.categories))
+
+    if(filter.dateFrom)
+        filters.push(gte(billsModel.date_of_payment, new Date(filter.dateFrom)))
+    
+    if(filter.dateTo)
+        filters.push(lte(billsModel.date_of_payment, new Date(filter.dateTo)))
+    }
+
+    if(filter.rangeType && Object.values(RangeType).includes(filter.rangeType)){
+        switch (filter.rangeType) {
+            case RangeType.Godine:
+                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'YYYY')`;
+                break;
+            case RangeType.Mjeseci:
+                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'MM-YYYY')`;
+                break;
+            case RangeType.Dani:
+                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'DD-MM-YYYY')`;
+                break;
+            }
+    }
+
+    if (!groupByDate) {
+        throw new Error("Invalid or missing rangeType for grouping");
+    }
+
+    const result = await db.select({
+        date: groupByDate,
+        category: billsModel.category,
+        totalAmount: sql`SUM(${billsModel.amount})`
+    }).from(billsModel).where(and(...filters)).groupBy(groupByDate, billsModel.category).orderBy(groupByDate);
+
+    return result;
+}

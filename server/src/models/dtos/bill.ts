@@ -22,6 +22,18 @@ import { ReceiptCategory } from "../../constants/Constants";
   error?:string
   }
 
+  export interface FilterDto {
+    dateFrom:string,
+    dateTo:string,
+    categories?:Array<ReceiptCategory>,
+    rangeType:RangeType
+  }
+
+  export enum RangeType {
+    Godine = 'Godine',
+    Mjeseci = 'Mjeseci',
+    Dani = 'Dani',
+  }
 const [firstKey, ...otherKeys] = Object.keys(ReceiptCategory).filter(key => isNaN(Number(key))) as (keyof typeof ReceiptCategory)[];
 
 export const createBill = z.object({

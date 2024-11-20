@@ -1,22 +1,41 @@
 <script setup lang="ts">
-import type { BillResponseDto, UploadBillDto } from '@/dtos/bills'
+import type {
+  BillSaveResponseDto,
+  MessageDto,
+  UploadBillResponseDto,
+} from '@/dtos/bills'
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser'
 import { ref } from 'vue'
 import type { VForm } from 'vuetify/components'
 import CategorySelect from '@/components/CategorySelect.vue'
+import type { BillModel } from '@/models/BillModel'
 
-const amountInput = ref<number>()
-const dateInput = ref<string | undefined>()
-const selectedCategory = ref<string | undefined>(undefined)
+const bill = ref<BillModel>({
+  category: '',
+  amount: 0,
+  date: '',
+})
 const form = ref<VForm | null>(null)
+const videoRef = ref<HTMLVideoElement | null>(null)
+const fileUploadRef = ref<HTMLInputElement | null>(null)
 
+const message = ref<MessageDto>({
+  messageAlert: false,
+  messageContent: '',
+  messageType: 'error',
+})
+const scanningMode = ref<boolean>(false)
+
+const codeReader = new BrowserMultiFormatReader()
+
+//Rules
 const amountRules = [
   (value: any) => {
-    if (value === undefined || value === 0) {
+    if (value === undefined || value === '' || value == null) {
       return 'Amount is required.'
     }
-    if (value < 0) {
-      return 'Amount must be a positive number.'
+    if (value <= 0) {
+      return 'Amount must be greater than 0'
     }
     return true
   },
@@ -31,16 +50,7 @@ const dateRules = [
   },
 ]
 
-const videoRef = ref<HTMLVideoElement | null>(null)
-const fileUploadRef = ref<HTMLInputElement | null>(null)
-
-const messageAlert = ref<boolean>(false)
-const messageType = ref<'success' | 'info' | 'warning' | 'error'>('success')
-const messageContent = ref<string | null>(null)
-const scanningMode = ref<boolean>(false)
-
-const codeReader = new BrowserMultiFormatReader()
-
+//handlers
 const handleBillsSaving = async () => {
   if ((await form.value?.validate())?.valid) {
     const response = await fetch('http://localhost:5000/bills/save-bill', {
@@ -49,23 +59,23 @@ const handleBillsSaving = async () => {
         'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
-        category: selectedCategory.value,
-        amount: amountInput.value,
-        date: dateInput.value ? new Date(dateInput.value) : null,
+        category: bill.value.category,
+        amount: bill.value.amount,
+        date: new Date(bill.value.date),
       }),
     })
 
-    const responseData: BillResponseDto = await response.json()
-    messageAlert.value = true
+    const responseData: BillSaveResponseDto = await response.json()
+    message.value.messageAlert = true
     if (responseData.error) {
-      messageType.value = 'warning'
-      messageAlert.value = true
-      messageContent.value = `${responseData.error}`
+      message.value.messageType = 'warning'
+      message.value.messageAlert = true
+      message.value.messageContent = `${responseData.error}`
     } else {
-      messageType.value = 'success'
-      messageContent.value = `${responseData.message}`
+      message.value.messageType = 'success'
+      message.value.messageContent = `${responseData.message}`
 
-      selectedCategory.value = dateInput.value = amountInput.value = undefined
+      form.value?.reset()
     }
   }
 }
@@ -116,23 +126,23 @@ const processBillInfo = async (
       },
       body: JSON.stringify({ content: decodedText, format: barcodeFormat }),
     })
-    var responseData: UploadBillDto = await response.json()
+    var responseData: UploadBillResponseDto = await response.json()
     if (responseData.error) {
-      messageType.value = 'warning'
-      messageAlert.value = true
-      messageContent.value = `${responseData.error}`
+      message.value.messageType = 'warning'
+      message.value.messageAlert = true
+      message.value.messageContent = `${responseData.error}`
       return
     }
 
     if (responseData.data?.category)
-      selectedCategory.value = responseData.data?.category
+      bill.value.category = responseData.data?.category
 
-    amountInput.value = responseData.data.amount
+    bill.value.amount = responseData.data.amount
 
     const formattedDate = new Date(responseData.data?.date_of_payment ?? '')
       .toISOString()
       .split('T')[0]
-    dateInput.value = formattedDate
+    bill.value.date = formattedDate
   } catch (error) {
     console.error('Error sending data to backend:', error)
   }
@@ -169,6 +179,8 @@ const handleFileUpload = async () => {
 
     const result = await codeReader.decodeFromImageUrl(imageUrl)
     processBillInfo(result.getText(), result.getBarcodeFormat())
+
+    fileUploadRef.value.value = ''
   } catch (error) {
     console.error('Error decoding barcode from image:', error)
   }
@@ -178,10 +190,6 @@ const triggerFileInput = () => {
   const fileInput = fileUploadRef.value
   if (fileInput) fileInput.click() // Triggers the file input dialog
 }
-
-const onCategorySelected = (newCategory: string | undefined) => {
-  selectedCategory.value = newCategory
-}
 </script>
 
 <template>
@@ -189,17 +197,17 @@ const onCategorySelected = (newCategory: string | undefined) => {
     <v-alert
       shaped
       outlined
-      :type="messageType"
-      v-if="messageAlert"
+      :type="message.messageType"
+      v-if="message.messageAlert"
       closable
       @click:close="
         () => {
-          messageAlert = false
+          message.messageAlert = false
         }
       "
       class="alert"
     >
-      {{ messageContent }}
+      {{ message.messageContent }}
     </v-alert>
 
     <!-- Scan and Upload Buttons Row -->
@@ -244,13 +252,13 @@ const onCategorySelected = (newCategory: string | undefined) => {
     <v-sheet class="mx-auto">
       <v-form ref="form" fast-fail @submit.prevent="handleBillsSaving">
         <CategorySelect
-          :foundCategory="selectedCategory"
-          @update:category="onCategorySelected"
+          :foundCategory="bill.category"
+          @update:category="newCategory => (bill.category = newCategory)"
           context="BillUpload"
         />
 
         <v-text-field
-          v-model.number="amountInput"
+          v-model.number="bill.amount"
           label="Amount"
           type="number"
           outlined
@@ -259,7 +267,7 @@ const onCategorySelected = (newCategory: string | undefined) => {
         />
 
         <v-text-field
-          v-model="dateInput"
+          v-model="bill.date"
           label="Date of Payment"
           type="date"
           outlined

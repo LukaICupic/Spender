@@ -1,3 +1,15 @@
+//Generic Dtos
+export interface MessageDto {
+  messageAlert: boolean
+  messageType: MessageType
+  messageContent: string | null
+}
+
+type MessageType = 'success' | 'info' | 'warning' | 'error'
+
+//Requests
+
+//Responses
 export interface CategoryDto {
   text: string
   value: string
@@ -8,7 +20,7 @@ export interface CategoryResponseDto {
   error?: string
 }
 
-export interface BillResponseDto {
+export interface BillSaveResponseDto {
   message?: string
   error?: string
 }
@@ -17,7 +29,7 @@ export interface CategoriesResponseDto {
   error?: string
 }
 
-export interface UploadBillDto {
+export interface UploadBillResponseDto {
   data: QRUploadedDto | PDF417UploadedDto
   error?: string
 }

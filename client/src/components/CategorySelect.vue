@@ -26,10 +26,6 @@ const categoryRules = [
       if (!value || (Array.isArray(value) && value.length === 0)) {
         return 'A category needs to be selected.'
       }
-    } else if (props.context === 'Statistics') {
-      if (value && (Array.isArray(value) ? value.length <= 0 : value === '')) {
-        return 'At least one category needs to be selected.'
-      }
     }
     return true
   },

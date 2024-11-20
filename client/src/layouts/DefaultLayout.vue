@@ -44,18 +44,13 @@ export default {
         <v-list density="compact" nav>
           <v-list-item
             to="/"
-            prepend-icon="mdi-home"
+            prepend-icon="mdi-receipt-text-plus"
             title="Home"
             value="Home"
           />
           <v-list-item
             to="/about"
-            prepend-icon="mdi-receipt-text-plus"
-            title="About"
-            value="About"
-          />
-          <v-list-item
-            prepend-icon="mdi-star"
+            prepend-icon="mdi-finance"
             title="Statistics"
             value="Statistics"
           />
