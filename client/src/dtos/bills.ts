@@ -7,6 +7,17 @@ export interface MessageDto {
 
 type MessageType = 'success' | 'info' | 'warning' | 'error'
 
+interface ChartDataset {
+  label: string
+  data: number[]
+  backgroundColor: string
+}
+
+export interface ChartData {
+  labels: string[]
+  datasets: ChartDataset[]
+}
+
 //Requests
 
 //Responses

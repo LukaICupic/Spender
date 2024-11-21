@@ -36,7 +36,7 @@ router.get('/categories', async (req:Request, res:Response<{data?:BillsCategoryM
 router.post('/filter', async(req:Request<FilterDto>, res:Response) => {
     try {
         var filteredData = await filterBills(req.body);
-        return res.status(200).json({ data:filteredData });
+        return res.status(200).json({ data: filteredData });
     } catch (error:any) {
         res.status(500).json({ error: error instanceof  Error ? error.message :  'Internal Server Error' });
     }})

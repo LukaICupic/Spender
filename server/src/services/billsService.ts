@@ -146,11 +146,15 @@ export const filterBills = async (filter:FilterDto) => {
         throw new Error("Invalid or missing rangeType for grouping");
     }
 
-    const result = await db.select({
+    const queryResult = await db.select({
         date: groupByDate,
         category: billsModel.category,
         totalAmount: sql`SUM(${billsModel.amount})`
     }).from(billsModel).where(and(...filters)).groupBy(groupByDate, billsModel.category).orderBy(groupByDate);
 
-    return result;
+    var finalResult = queryResult.map(({ category, ...rest }) => ({
+        ...rest, 
+        category: ReceiptCategory[category as keyof typeof ReceiptCategory]
+    }))
+    return finalResult;
 }
