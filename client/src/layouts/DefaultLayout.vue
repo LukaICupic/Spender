@@ -49,7 +49,7 @@ export default {
             value="Home"
           />
           <v-list-item
-            to="/about"
+            to="/analytics"
             prepend-icon="mdi-finance"
             title="Statistics"
             value="Statistics"

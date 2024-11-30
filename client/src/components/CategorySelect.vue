@@ -13,7 +13,7 @@ const props = defineProps({
   },
   context: {
     type: String,
-    default: 'StatisticsView',
+    default: 'AnalyticsView',
   },
 })
 

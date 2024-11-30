@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ReceiptCategory } from "../../constants/Constants";
 
+  export interface FilterResponseDto {
+    category: ReceiptCategory;
+    date: string;
+    totalAmount: number;
+  }
   export interface PDF417UploadedDto {
     category?: string | null;
     amount: number;

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { saveBill, uploadBill, getBillCategories, filterBills } from '../services/billsService';
-import { BillSavedDto, BillsCategoryModel, CreateBillDto, FilterDto, PDF417UploadedDto, QRUploadedDto, UploadBillDto } from '../models/dtos/bill';
+import { BillSavedDto, BillsCategoryModel, CreateBillDto, FilterDto, FilterResponseDto, PDF417UploadedDto, QRUploadedDto, UploadBillDto } from '../models/dtos/bill';
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ router.get('/categories', async (req:Request, res:Response<{data?:BillsCategoryM
     }
 })
 
-router.post('/filter', async(req:Request<FilterDto>, res:Response) => {
+router.post('/filter', async(req:Request<FilterDto>, res:Response<{data?:FilterResponseDto[], error?:string}>) => {
     try {
         var filteredData = await filterBills(req.body);
         return res.status(200).json({ data: filteredData });

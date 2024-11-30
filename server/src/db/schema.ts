@@ -7,3 +7,9 @@ export const billsModel = pgTable("bills", {
   payer: varchar({ length: 255 }).notNull(),
   date_of_payment: timestamp().notNull(),
 });
+
+export const userModel = pgTable("user", {
+  id: integer().primaryKey(),
+  user_name: varchar({ length: 255 }).notNull(),
+  password: varchar({ length: 255 }).notNull()
+})

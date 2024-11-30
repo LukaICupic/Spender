@@ -15,6 +15,8 @@
   "dependencies": {
     "@zxing/browser": "^0.1.5",
     "chart.js": "^4.4.6",
+    "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "vue": "^3.5.11",
     "vue-router": "^4.4.5",
     "vuetify": "^3.7.4"
@@ -23,6 +25,8 @@
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
     "@tsconfig/node20": "^20.1.4",
+    "@types/js-cookie": "^3.0.6",
+    "@types/jwt-decode": "^3.1.0",
     "@types/node": "^20.16.11",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitejs/plugin-vue-jsx": "^4.0.1",

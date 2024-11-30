@@ -61,6 +61,7 @@ let config = {
         text: 'Chart.js Bar Chart - Stacked',
       },
     },
+    maintainAspectRatio: false,
     responsive: true,
     scales: {
       x: {
@@ -68,6 +69,9 @@ let config = {
       },
       y: {
         stacked: true,
+        ticks: {
+          stepSize: 500,
+        },
       },
     },
   },
@@ -123,6 +127,7 @@ const handleStatsData = async () => {
       })
 
       var result = await response.json()
+      console.log('categories', selectedCategories.value)
 
       //Creating unique array of dates
       const labels = [
@@ -167,43 +172,66 @@ const handleStatsData = async () => {
 
 <template>
   <v-container>
-    <v-sheet class="mx-auto">
-      <canvas ref="chartCanvas" style="max-width: 100%; height: 400px"></canvas>
-      <v-form ref="form" fast-fail @submit.prevent="handleStatsData">
-        <CategorySelect
-          :foundCategory="selectedCategories"
-          @update:category="onCategorySelected"
-          :multiple="true"
-          context="Statistics"
-        />
+    <v-sheet class="mx-auto" style="display: flex; flex-direction: column">
+      <div class="chart-container">
+        <canvas
+          ref="chartCanvas"
+          style="min-width: 100%; min-height: 100%"
+        ></canvas>
+      </div>
+      <div>
+        <v-form ref="form" fast-fail @submit.prevent="handleStatsData">
+          <CategorySelect
+            :foundCategory="selectedCategories"
+            @update:category="onCategorySelected"
+            :multiple="true"
+            context="Statistics"
+          />
 
-        <v-select
-          v-model="selectedRange"
-          :items="ranges"
-          :rules="rangeRules"
-          label="View by"
-        />
+          <v-select
+            v-model="selectedRange"
+            :items="ranges"
+            :rules="rangeRules"
+            label="View by"
+          />
 
-        <v-text-field
-          v-model="dateFrom"
-          label="Start date"
-          type="date"
-          outlined
-          dense
-          validate-on="blur"
-          :rules="dateRules"
-        />
-        <v-text-field
-          v-model="dateTo"
-          label="End date"
-          type="date"
-          outlined
-          dense
-          validate-on="blur"
-          :rules="dateRules"
-        />
-        <v-btn block color="secondary" type="submit">Save</v-btn>
-      </v-form>
+          <v-text-field
+            v-model="dateFrom"
+            label="Start date"
+            type="date"
+            outlined
+            dense
+            validate-on="blur"
+            :rules="dateRules"
+          />
+          <v-text-field
+            v-model="dateTo"
+            label="End date"
+            type="date"
+            outlined
+            dense
+            validate-on="blur"
+            :rules="dateRules"
+          />
+          <v-btn block color="secondary" type="submit">Filter</v-btn>
+        </v-form>
+      </div>
     </v-sheet>
   </v-container>
 </template>
+
+<style scoped>
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 50vh;
+  width: 90vw;
+}
+
+@media (min-width: 900px) {
+  .chart-container {
+    height: 70vh;
+    width: 70vw;
+  }
+}
+</style>

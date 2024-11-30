@@ -1,5 +1,5 @@
 import { Bill_Payment_Payee, BarcodeFormat, ReceiptCategory } from "../constants/Constants";
-import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType } from "../models/dtos/bill";
+import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType, FilterResponseDto } from "../models/dtos/bill";
 import {db} from '../db/index';
 import {billsModel} from '../db/schema';
 import { SQL, and, gte, lte, inArray, sql} from "drizzle-orm";
@@ -115,7 +115,7 @@ const findCategory = (category:string): string | null => {
     return null;
 } 
 
-export const filterBills = async (filter:FilterDto) => {    
+export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]> => {    
     const filters: SQL[] = [];
     let groupByDate: SQL | null = null;
     if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0) {
@@ -152,9 +152,11 @@ export const filterBills = async (filter:FilterDto) => {
         totalAmount: sql`SUM(${billsModel.amount})`
     }).from(billsModel).where(and(...filters)).groupBy(groupByDate, billsModel.category).orderBy(groupByDate);
 
-    var finalResult = queryResult.map(({ category, ...rest }) => ({
-        ...rest, 
-        category: ReceiptCategory[category as keyof typeof ReceiptCategory]
-    }))
+    var finalResult: FilterResponseDto[] = queryResult.map(({ category, totalAmount, date }) => ({
+        category: ReceiptCategory[category as keyof typeof ReceiptCategory],
+        totalAmount: totalAmount as number,
+        date: date as string,
+    }));
+
     return finalResult;
 }
