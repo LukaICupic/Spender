@@ -9,6 +9,8 @@ import { ref } from 'vue'
 import type { VForm } from 'vuetify/components'
 import CategorySelect from '@/components/CategorySelect.vue'
 import type { BillModel } from '@/models/BillModel'
+import { Vue3Lottie } from 'vue3-lottie'
+import PiggyAnimation from '@/assets/piggy.json'
 
 const bill = ref<BillModel>({
   category: '',
@@ -193,7 +195,7 @@ const triggerFileInput = () => {
 </script>
 
 <template>
-  <v-container>
+  <v-container class="container-wrapper">
     <v-alert
       shaped
       outlined
@@ -210,83 +212,111 @@ const triggerFileInput = () => {
       {{ message.messageContent }}
     </v-alert>
 
-    <!-- Scan and Upload Buttons Row -->
-    <v-row v-if="!scanningMode" class="mb-4 mt-4">
-      <v-col col="5">
-        <v-btn color="secondary" block @click="startScanner">
-          <v-icon left>mdi-qrcode-scan</v-icon>
-          Scan
-        </v-btn>
-      </v-col>
-      <v-col col="5">
-        <v-btn color="secondary" block @click="triggerFileInput">
-          <v-icon left>mdi-image</v-icon>
-          Upload
-        </v-btn>
-      </v-col>
+    <v-row>
+      <v-row class="d-flex justify-center mb-2 mt-2">
+        <video
+          v-if="scanningMode"
+          ref="videoRef"
+          style="object-fit: cover"
+        ></video>
+        <Vue3Lottie
+          v-else
+          :animationData="PiggyAnimation"
+          width="100"
+          height="100"
+        />
+      </v-row>
     </v-row>
 
-    <!-- Hidden file input -->
-    <input
-      ref="fileUploadRef"
-      type="file"
-      accept="image/*"
-      style="display: none"
-      @change="handleFileUpload"
-    />
+    <v-row style="flex: none; margin: 0px">
+      <!-- Hidden file input -->
+      <input
+        ref="fileUploadRef"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        @change="handleFileUpload"
+      />
 
-    <!-- Video and Stop Button when scanning -->
-    <v-row v-if="scanningMode" class="d-flex justify-center align-center mb-4">
-      <video ref="videoRef"></video>
+      <!-- Category and Form Fields -->
+      <v-sheet
+        class="mx-auto"
+        style="width: 100%; display: flex; flex-direction: column"
+      >
+        <!-- Scan and Upload Buttons Row -->
+        <v-row class="mb-2">
+          <v-col v-if="!scanningMode" col="6">
+            <v-btn
+              rounded
+              color="secondary"
+              block
+              height="36px"
+              @click="startScanner"
+            >
+              <v-icon left>mdi-qrcode-scan</v-icon>
+              &nbsp; Scan
+            </v-btn>
+          </v-col>
+          <v-col v-if="scanningMode" col="6">
+            <v-btn
+              rounded
+              block
+              @click="stopScanner"
+              style="color: #ffff; background-color: #59d9cd"
+            >
+              &nbsp; Stop
+            </v-btn>
+          </v-col>
+          <v-col col="6">
+            <v-btn rounded color="secondary" block @click="triggerFileInput">
+              <v-icon left>mdi-image</v-icon>
+              Upload
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-form ref="form" fast-fail @submit.prevent="handleBillsSaving">
+          <CategorySelect
+            :foundCategory="bill.category"
+            @update:category="newCategory => (bill.category = newCategory)"
+            context="BillUpload"
+          />
+
+          <v-text-field
+            v-model.number="bill.amount"
+            label="Amount"
+            type="number"
+            outlined
+            dense
+            :rules="amountRules"
+          />
+
+          <v-text-field
+            v-model="bill.date"
+            label="Date of Payment"
+            type="date"
+            outlined
+            dense
+            :rules="dateRules"
+          />
+          <v-btn rounded block color="secondary" type="submit">Save</v-btn>
+        </v-form>
+      </v-sheet>
     </v-row>
-    <v-btn
-      block
-      v-if="scanningMode"
-      color="error"
-      @click="stopScanner"
-      class="mt-2 mb-6"
-      >Stop</v-btn
-    >
-
-    <!-- Category and Form Fields -->
-    <v-sheet class="mx-auto">
-      <v-form ref="form" fast-fail @submit.prevent="handleBillsSaving">
-        <CategorySelect
-          :foundCategory="bill.category"
-          @update:category="newCategory => (bill.category = newCategory)"
-          context="BillUpload"
-        />
-
-        <v-text-field
-          v-model.number="bill.amount"
-          label="Amount"
-          type="number"
-          outlined
-          dense
-          :rules="amountRules"
-        />
-
-        <v-text-field
-          v-model="bill.date"
-          label="Date of Payment"
-          type="date"
-          outlined
-          dense
-          :rules="dateRules"
-        />
-        <v-btn block color="secondary" type="submit">Save</v-btn>
-      </v-form>
-    </v-sheet>
   </v-container>
 </template>
 
 <style scoped>
 video {
-  max-width: 95%;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  margin-top: 16px;
+  max-width: 93%;
+}
+
+.container-wrapper {
+  min-height: 90vh;
+  justify-content: center;
+  flex-direction: column;
+  display: flex;
+  padding: 0px 16px;
+  overflow: hidden;
 }
 
 .alert {

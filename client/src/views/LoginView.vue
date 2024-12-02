@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import router from '@/router'
 import { ref } from 'vue'
 import { VForm, VTextField } from 'vuetify/components'
 
 const userName = ref(null)
 const password = ref(null)
 const form = ref<VForm | null>(null)
+const serverError = ref<string | null>(null)
 const inputRules = (field: string) => [
   (value: any) => {
     if (!value || value === '') {
@@ -15,18 +17,28 @@ const inputRules = (field: string) => [
 ]
 
 const handleLogin = async () => {
-  if ((await form.value?.validate())?.valid) {
-    const response = await fetch('http://localhost:5000/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-      },
-      body: JSON.stringify({
-        userName: userName.value,
-        password: password.value,
-      }),
-    })
+  try {
+    if ((await form.value?.validate())?.valid) {
+      const response = await fetch('http://localhost:5000/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({
+          userName: userName.value,
+          password: password.value,
+        }),
+      })
+
+      var responseData = await response.json()
+      if (!response.ok) serverError.value = responseData.error
+
+      if (responseData.data?.success) router.push({ path: 'home' })
+    }
+  } catch (error: any) {
+    serverError.value = 'Something went wrong...'
+    console.error(error)
   }
 }
 </script>
@@ -46,12 +58,13 @@ const handleLogin = async () => {
       <v-form ref="form" fast-fail @submit.prevent="handleLogin">
         <v-text-field
           v-model="userName"
-          label="UserName"
-          placeholder="UserName"
-          type="UserName"
+          label="Username"
+          placeholder="Username"
+          type="text"
           outlined
           class="mb-4"
           :rules="inputRules('Username')"
+          :error-messages="serverError ? [''] : []"
         />
 
         <v-text-field
@@ -62,6 +75,7 @@ const handleLogin = async () => {
           outlined
           class="mb-4"
           :rules="inputRules('Password')"
+          :error-messages="serverError ? [serverError] : []"
         />
         <v-btn color="secondary" type="submit" block rounded>Log In</v-btn>
       </v-form>

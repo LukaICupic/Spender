@@ -8,12 +8,12 @@ const router = express.Router();
 router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:LoginResponse, error?:string}>) => {
     try {
         const userData = await loginUser(req.body);
-        console.log("userData", userData)
+        
         res.cookie('token', userData, {
             httpOnly:false,
             secure: process.env.NODE_ENV === 'PRODUCTION',
             maxAge: 48 * 60 * 60 * 1000,
-            sameSite: process.env.NODE_ENV === 'PRODUCTION' ? 'strict':'none'
+            sameSite: 'lax'
         }).json({
             data: {success:true, message: 'Logged In'}
         })

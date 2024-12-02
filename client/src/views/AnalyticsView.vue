@@ -171,52 +171,57 @@ const handleStatsData = async () => {
 </script>
 
 <template>
-  <v-container>
-    <v-sheet class="mx-auto" style="display: flex; flex-direction: column">
-      <div class="chart-container">
-        <canvas
-          ref="chartCanvas"
-          style="min-width: 100%; min-height: 100%"
-        ></canvas>
-      </div>
-      <div>
-        <v-form ref="form" fast-fail @submit.prevent="handleStatsData">
-          <CategorySelect
-            :foundCategory="selectedCategories"
-            @update:category="onCategorySelected"
-            :multiple="true"
-            context="Statistics"
-          />
+  <v-container class="container-wrapper">
+    <v-row style="margin: 0px">
+      <v-sheet
+        class="mx-auto"
+        style="width: 100%; display: flex; flex-direction: column"
+      >
+        <div class="chart-container">
+          <canvas
+            ref="chartCanvas"
+            style="min-width: 100%; min-height: 100%"
+          ></canvas>
+        </div>
+        <div>
+          <v-form ref="form" fast-fail @submit.prevent="handleStatsData">
+            <CategorySelect
+              :foundCategory="selectedCategories"
+              @update:category="onCategorySelected"
+              :multiple="true"
+              context="Statistics"
+            />
 
-          <v-select
-            v-model="selectedRange"
-            :items="ranges"
-            :rules="rangeRules"
-            label="View by"
-          />
+            <v-select
+              v-model="selectedRange"
+              :items="ranges"
+              :rules="rangeRules"
+              label="View by"
+            />
 
-          <v-text-field
-            v-model="dateFrom"
-            label="Start date"
-            type="date"
-            outlined
-            dense
-            validate-on="blur"
-            :rules="dateRules"
-          />
-          <v-text-field
-            v-model="dateTo"
-            label="End date"
-            type="date"
-            outlined
-            dense
-            validate-on="blur"
-            :rules="dateRules"
-          />
-          <v-btn block color="secondary" type="submit">Filter</v-btn>
-        </v-form>
-      </div>
-    </v-sheet>
+            <v-text-field
+              v-model="dateFrom"
+              label="Start date"
+              type="date"
+              outlined
+              dense
+              validate-on="blur"
+              :rules="dateRules"
+            />
+            <v-text-field
+              v-model="dateTo"
+              label="End date"
+              type="date"
+              outlined
+              dense
+              validate-on="blur"
+              :rules="dateRules"
+            />
+            <v-btn block rounded color="secondary" type="submit">Filter</v-btn>
+          </v-form>
+        </div>
+      </v-sheet>
+    </v-row>
   </v-container>
 </template>
 
@@ -226,6 +231,15 @@ const handleStatsData = async () => {
   margin: auto;
   height: 50vh;
   width: 90vw;
+}
+
+.container-wrapper {
+  min-height: 90vh;
+  justify-content: center;
+  flex-direction: column;
+  display: flex;
+  padding: 0px 16px;
+  overflow: hidden;
 }
 
 @media (min-width: 900px) {

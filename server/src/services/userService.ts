@@ -16,9 +16,8 @@ export const loginUser = async(loginData:UserLoginDto) => {
             throw new Error("Username or password is invalid.")
         
         var isMatch = await bcrypt.compare(loginData.password, foundUser[0].password)
-        if (!isMatch) 
-            throw new Error('Invalid credentials');
-
+        if (!isMatch) throw new Error("Username or password is invalid.");
+        
         const token = jwt.sign(
             {userId: foundUser[0].id, userName: foundUser[0].user_name},
             process.env.JWT_SECRET!,
@@ -29,6 +28,6 @@ export const loginUser = async(loginData:UserLoginDto) => {
 
     } catch (error:any) {
         console.error('Error authenticating user:', error);
-        throw new Error(`Error authenticating user: ${error.message}`);
+        throw new Error(error.message);
     }
 }
