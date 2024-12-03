@@ -19,17 +19,20 @@ const inputRules = (field: string) => [
 const handleLogin = async () => {
   try {
     if ((await form.value?.validate())?.valid) {
-      const response = await fetch('http://localhost:5000/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/login`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          body: JSON.stringify({
+            userName: userName.value,
+            password: password.value,
+          }),
         },
-        body: JSON.stringify({
-          userName: userName.value,
-          password: password.value,
-        }),
-      })
+      )
 
       var responseData = await response.json()
       if (!response.ok) serverError.value = responseData.error

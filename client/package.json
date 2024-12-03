@@ -28,7 +28,7 @@
     "@tsconfig/node20": "^20.1.4",
     "@types/js-cookie": "^3.0.6",
     "@types/jwt-decode": "^3.1.0",
-    "@types/node": "^20.16.11",
+    "@types/node": "^20.17.9",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
     "@vue/eslint-config-prettier": "^10.0.0",

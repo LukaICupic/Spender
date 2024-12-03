@@ -1,6 +1,6 @@
 import { integer, pgTable, timestamp, varchar, real } from "drizzle-orm/pg-core";
 
-export const billsModel = pgTable("bills", {
+export const billsModel = pgTable("bill", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   category: varchar({ length: 255 }).notNull(), //ReceiptCategory
   amount: real().notNull(),

@@ -4,17 +4,16 @@ import userRouter from './routes/user';
 import cors from 'cors';
 
 const app:Application = express();
-const port:number = 5000;
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: `${process.env.API_BASE}:${process.env.API_PORT}`,
   credentials: true,
 }));
 
 app.use('/bills', billsRouter);
 app.use(userRouter);
 
-app.listen(port, () => {
-  return console.log(`Express is listening at http://localhost:${port}`);
+app.listen(process.env.API_PORT, () => {
+  return console.log(`Express is listening at ${process.env.API_BASE}:${process.env.API_PORT}`);
 });

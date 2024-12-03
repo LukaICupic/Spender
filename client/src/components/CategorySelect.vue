@@ -61,7 +61,9 @@ onMounted(async () => {
 
 const getBillCategories = async (): Promise<CategoryDto[] | undefined> => {
   try {
-    const response = await fetch('http://localhost:5000/bills/categories')
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/bills/categories`,
+    )
 
     const responseData: CategoryResponseDto = await response.json()
 

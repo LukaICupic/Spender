@@ -55,17 +55,20 @@ const dateRules = [
 //handlers
 const handleBillsSaving = async () => {
   if ((await form.value?.validate())?.valid) {
-    const response = await fetch('http://localhost:5000/bills/save-bill', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/bills/save-bill`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({
+          category: bill.value.category,
+          amount: bill.value.amount,
+          date: new Date(bill.value.date),
+        }),
       },
-      body: JSON.stringify({
-        category: bill.value.category,
-        amount: bill.value.amount,
-        date: new Date(bill.value.date),
-      }),
-    })
+    )
 
     const responseData: BillSaveResponseDto = await response.json()
     message.value.messageAlert = true
@@ -121,13 +124,16 @@ const processBillInfo = async (
   barcodeFormat: BarcodeFormat,
 ) => {
   try {
-    const response = await fetch('http://localhost:5000/bills/send-bill', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/bills/send-bill`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({ content: decodedText, format: barcodeFormat }),
       },
-      body: JSON.stringify({ content: decodedText, format: barcodeFormat }),
-    })
+    )
     var responseData: UploadBillResponseDto = await response.json()
     if (responseData.error) {
       message.value.messageType = 'warning'

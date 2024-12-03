@@ -113,18 +113,22 @@ onMounted(async () => {
 const handleStatsData = async () => {
   try {
     if ((await form.value?.validate())?.valid) {
-      var response = await fetch('http://localhost:5000/bills/filter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
+      console.log('test', `${import.meta.env.VITE_API_BASE_URL}/bills/filter`)
+      var response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/bills/filter`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          body: JSON.stringify({
+            dateFrom: dateFrom.value,
+            dateTo: dateTo.value,
+            categories: selectedCategories.value,
+            rangeType: selectedRange.value,
+          }),
         },
-        body: JSON.stringify({
-          dateFrom: dateFrom.value,
-          dateTo: dateTo.value,
-          categories: selectedCategories.value,
-          rangeType: selectedRange.value,
-        }),
-      })
+      )
 
       var result = await response.json()
       console.log('categories', selectedCategories.value)
