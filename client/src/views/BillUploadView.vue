@@ -56,7 +56,7 @@ const dateRules = [
 const handleBillsSaving = async () => {
   if ((await form.value?.validate())?.valid) {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bills/save-bill`,
+      `${import.meta.env.VITE_API_BASE_URL}/bill/save-bill`,
       {
         method: 'POST',
         headers: {
@@ -125,7 +125,7 @@ const processBillInfo = async (
 ) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bills/send-bill`,
+      `${import.meta.env.VITE_API_BASE_URL}/bill/send-bill`,
       {
         method: 'POST',
         headers: {

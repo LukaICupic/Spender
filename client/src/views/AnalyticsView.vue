@@ -115,7 +115,7 @@ const handleStatsData = async () => {
     if ((await form.value?.validate())?.valid) {
       console.log('test', `${import.meta.env.VITE_API_BASE_URL}/bills/filter`)
       var response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/bills/filter`,
+        `${import.meta.env.VITE_API_BASE_URL}/bill/filter`,
         {
           method: 'POST',
           headers: {

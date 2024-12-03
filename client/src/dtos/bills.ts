@@ -21,16 +21,6 @@ export interface ChartData {
 //Requests
 
 //Responses
-export interface CategoryDto {
-  text: string
-  value: string
-}
-
-export interface CategoryResponseDto {
-  data?: CategoryDto[]
-  error?: string
-}
-
 export interface BillSaveResponseDto {
   message?: string
   error?: string

@@ -1,7 +1,7 @@
 import { Bill_Payment_Payee, BarcodeFormat, ReceiptCategory } from "../constants/Constants";
 import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType, FilterResponseDto } from "../models/dtos/bill";
 import {db} from '../db/index';
-import {billsModel} from '../db/schema';
+import {billModel} from '../db/schema';
 import { SQL, and, gte, lte, inArray, sql} from "drizzle-orm";
 
 export const saveBill = async(bill:CreateBillDto) => {
@@ -14,7 +14,7 @@ export const saveBill = async(bill:CreateBillDto) => {
             throw new Error('Invalid bill data');
           }
 
-        return await db.insert(billsModel).values(validateBill.data);
+        return await db.insert(billModel).values(validateBill.data);
     } catch (error:any) {
         console.error('Error processing bill:', error);
         throw new Error(`Error processing bill: ${error.message}`);
@@ -119,25 +119,25 @@ export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]
     const filters: SQL[] = [];
     let groupByDate: SQL | null = null;
     if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0) {
-        filters.push(inArray(billsModel.category, filter.categories))
+        filters.push(inArray(billModel.category, filter.categories))
 
     if(filter.dateFrom)
-        filters.push(gte(billsModel.date_of_payment, new Date(filter.dateFrom)))
+        filters.push(gte(billModel.date_of_payment, new Date(filter.dateFrom)))
     
     if(filter.dateTo)
-        filters.push(lte(billsModel.date_of_payment, new Date(filter.dateTo)))
+        filters.push(lte(billModel.date_of_payment, new Date(filter.dateTo)))
     }
 
     if(filter.rangeType && Object.values(RangeType).includes(filter.rangeType)){
         switch (filter.rangeType) {
             case RangeType.Godine:
-                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'YYYY')`;
+                groupByDate = sql`TO_CHAR(${billModel.date_of_payment}, 'YYYY')`;
                 break;
             case RangeType.Mjeseci:
-                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'MM-YYYY')`;
+                groupByDate = sql`TO_CHAR(${billModel.date_of_payment}, 'MM-YYYY')`;
                 break;
             case RangeType.Dani:
-                groupByDate = sql`TO_CHAR(${billsModel.date_of_payment}, 'DD-MM-YYYY')`;
+                groupByDate = sql`TO_CHAR(${billModel.date_of_payment}, 'DD-MM-YYYY')`;
                 break;
             }
     }
@@ -148,9 +148,9 @@ export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]
 
     const queryResult = await db.select({
         date: groupByDate,
-        category: billsModel.category,
-        totalAmount: sql`SUM(${billsModel.amount})`
-    }).from(billsModel).where(and(...filters)).groupBy(groupByDate, billsModel.category).orderBy(groupByDate);
+        category: billModel.category,
+        totalAmount: sql`SUM(${billModel.amount})`
+    }).from(billModel).where(and(...filters)).groupBy(groupByDate, billModel.category).orderBy(groupByDate);
 
     var finalResult: FilterResponseDto[] = queryResult.map(({ category, totalAmount, date }) => ({
         category: ReceiptCategory[category as keyof typeof ReceiptCategory],

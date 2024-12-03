@@ -1,11 +1,11 @@
 
 import express, { Request, Response } from 'express';
 import { loginUser } from '../services/userService';
-import { LoginResponse, UserLoginDto } from '../models/dtos/user';
+import { UserLoginResponse, UserLoginDto } from '../models/dtos/user';
 
 const router = express.Router();
 
-router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:LoginResponse, error?:string}>) => {
+router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserLoginResponse, error?:string}>) => {
     try {
         const userData = await loginUser(req.body);
         

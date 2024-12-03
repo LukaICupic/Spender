@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CategoryDto, CategoryResponseDto } from '@/dtos/bills'
+import type { CategoryDto, CategoryResponseDto } from '@/dtos/category'
 import { onMounted, ref, watch, type PropType } from 'vue'
 
 const props = defineProps({
@@ -53,7 +53,8 @@ watch(
 
 onMounted(async () => {
   try {
-    categories.value = await getBillCategories()
+    // categories.value = await getBillCategories()
+    await getBillCategories()
   } catch (error) {
     console.error('Error fetching categories:', error)
   }
@@ -62,11 +63,13 @@ onMounted(async () => {
 const getBillCategories = async (): Promise<CategoryDto[] | undefined> => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bills/categories`,
+      `${import.meta.env.VITE_API_BASE_URL}/categories`,
     )
 
-    const responseData: CategoryResponseDto = await response.json()
+    console.log('categories response', await response.json())
 
+    const responseData: CategoryResponseDto = await response.json()
+    return []
     if (responseData.error) {
       return []
     } else return responseData?.data ?? []
