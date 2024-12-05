@@ -14,6 +14,7 @@ import {
   BarController,
   type ChartType,
 } from 'chart.js'
+import { postRequest } from '@/utils'
 
 ChartJS.register(
   Title,
@@ -35,7 +36,7 @@ const dateFrom = ref<string>(
     .split('T')[0],
 )
 const dateTo = ref<string>(new Date().toISOString().split('T')[0])
-const selectedCategories = ref<string | undefined>(undefined)
+const selectedCategories = ref<number | undefined>(undefined)
 const selectedRange = ref<string>('Mjeseci')
 const ranges = ref<Array<string>>(['Godine', 'Mjeseci', 'Dani'])
 const chartData = ref<ChartData>({
@@ -98,7 +99,7 @@ const dateRules = [
     return true
   },
 ]
-const onCategorySelected = (newCategory: string | undefined) => {
+const onCategorySelected = (newCategory: number | undefined) => {
   selectedCategories.value = newCategory
 }
 
@@ -113,25 +114,14 @@ onMounted(async () => {
 const handleStatsData = async () => {
   try {
     if ((await form.value?.validate())?.valid) {
-      console.log('test', `${import.meta.env.VITE_API_BASE_URL}/bills/filter`)
-      var response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/bill/filter`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-          },
-          body: JSON.stringify({
-            dateFrom: dateFrom.value,
-            dateTo: dateTo.value,
-            categories: selectedCategories.value,
-            rangeType: selectedRange.value,
-          }),
-        },
-      )
+      const response = await postRequest('/filter-bills', {
+        dateFrom: dateFrom.value,
+        dateTo: dateTo.value,
+        categories: selectedCategories.value,
+        rangeType: selectedRange.value,
+      })
 
       var result = await response.json()
-      console.log('categories', selectedCategories.value)
 
       //Creating unique array of dates
       const labels = [
@@ -201,14 +191,16 @@ const handleStatsData = async () => {
               :items="ranges"
               :rules="rangeRules"
               label="View by"
+              variant="outlined"
+              density="compact"
             />
 
             <v-text-field
               v-model="dateFrom"
               label="Start date"
               type="date"
-              outlined
-              dense
+              variant="outlined"
+              density="compact"
               validate-on="blur"
               :rules="dateRules"
             />
@@ -216,8 +208,8 @@ const handleStatsData = async () => {
               v-model="dateTo"
               label="End date"
               type="date"
-              outlined
-              dense
+              variant="outlined"
+              density="compact"
               validate-on="blur"
               :rules="dateRules"
             />

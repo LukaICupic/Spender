@@ -19,8 +19,10 @@ import {
   VDivider,
   VMain,
   VLayout,
+  VDialog,
   VCard,
   VCardTitle,
+  VCardText,
   VToolbar,
   VToolbarTitle,
   VIcon,
@@ -30,10 +32,14 @@ import {
   VSelect,
   VImg,
   VSpacer,
+  VCardActions,
+  VSnackbar,
 } from 'vuetify/components'
+import { VDateInput } from 'vuetify/labs/components'
 
 export default createVuetify({
   components: {
+    VDateInput,
     VDatePicker,
     VSheet,
     VForm,
@@ -50,8 +56,12 @@ export default createVuetify({
     VDivider,
     VMain,
     VLayout,
+    VDialog,
+    VSnackbar,
     VCard,
     VCardTitle,
+    VCardText,
+    VCardActions,
     VToolbar,
     VToolbarTitle,
     VIcon,

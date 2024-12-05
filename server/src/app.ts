@@ -3,15 +3,16 @@ import billsRouter from './routes/bill';
 import userRouter from './routes/user';
 import categoryRouter from './routes/category';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const app:Application = express();
 
 app.use(express.json());
-console.log("log values", `${process.env.API_BASE}:${process.env.CLIENT_PORT}`)
 app.use(cors({
   origin: `${process.env.API_BASE}:${process.env.CLIENT_PORT}`,
   credentials: true,
 }));
+app.use(cookieParser());
 
 app.use(billsRouter);
 app.use(userRouter);

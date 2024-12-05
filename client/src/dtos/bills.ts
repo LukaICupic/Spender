@@ -36,13 +36,11 @@ export interface UploadBillResponseDto {
 }
 
 interface QRUploadedDto {
-  category: null
   amount: number
   date_of_payment: Date
 }
 
 interface PDF417UploadedDto {
-  category?: string | null
   amount: number
   date_of_payment: Date
 }

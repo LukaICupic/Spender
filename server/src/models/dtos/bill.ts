@@ -2,12 +2,11 @@ import { z } from "zod";
 import { ReceiptCategory } from "../../constants/Constants";
 
   export interface FilterResponseDto {
-    category: ReceiptCategory;
+    category: number;
     date: string;
     totalAmount: number;
   }
   export interface PDF417UploadedDto {
-    category?: string | null;
     amount: number;
     date_of_payment: Date;
   }
@@ -30,7 +29,7 @@ import { ReceiptCategory } from "../../constants/Constants";
   export interface FilterDto {
     dateFrom:string,
     dateTo:string,
-    categories?:Array<ReceiptCategory>,
+    categories?:Array<number>,
     rangeType:RangeType
   }
 
@@ -39,17 +38,16 @@ import { ReceiptCategory } from "../../constants/Constants";
     Mjeseci = 'Mjeseci',
     Dani = 'Dani',
   }
-const [firstKey, ...otherKeys] = Object.keys(ReceiptCategory).filter(key => isNaN(Number(key))) as (keyof typeof ReceiptCategory)[];
 
-export const createBill = z.object({
-  category: z.enum([firstKey, ...otherKeys] as const), 
-  amount: z.number(),
-  payer: z.string().min(4, { message: "Payer length must be at least 4 characters" }),
-  date: z.coerce.date()
-}).transform(data => ({
-  ...data,
-  date_of_payment : data.date
-}));
+  export const createBill = z.object({
+    category: z.number(),
+    amount: z.number(),
+    payer: z.number(),
+    date: z.coerce.date(),  // Ensure that date is coerced to a Date object
+  }).transform(data => ({
+    ...data,
+    date_of_payment: data.date,  // Transform 'date' into 'date_of_payment'
+  }));
 
 export const uploaBill = z.object({
   content: z.string(),

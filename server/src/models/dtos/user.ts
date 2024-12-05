@@ -14,7 +14,7 @@ export interface UserLoginResponse {
 
   export const CategorySchema = z.object({
     id: z.number(),
-    category_name: z.string().max(255),
+    name: z.string().max(255),
     bill_id: z.number().nullable(),
     user_id: z.number().nullable(),
 });

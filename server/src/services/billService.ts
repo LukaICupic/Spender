@@ -1,21 +1,27 @@
-import { Bill_Payment_Payee, BarcodeFormat, ReceiptCategory } from "../constants/Constants";
+import { BarcodeFormat, ReceiptCategory } from "../constants/Constants";
 import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType, FilterResponseDto } from "../models/dtos/bill";
 import {db} from '../db/index';
 import {billModel} from '../db/schema';
 import { SQL, and, gte, lte, inArray, sql} from "drizzle-orm";
 
-export const saveBill = async(bill:CreateBillDto) => {
+export const saveBill = async(bill: Omit<CreateBillDto, 'payer'>, userId: number) => {
     try {
-        bill.payer = "gramAna"
-        const validateBill = createBill.safeParse(bill);
+        const validateBill = createBill.safeParse({...bill, payer: userId});
 
         if (!validateBill.success) {
             console.error('Validation failed:', validateBill.error);
             throw new Error('Invalid bill data');
-          }
+        }
 
-        return await db.insert(billModel).values(validateBill.data);
-    } catch (error:any) {
+        const dbBill = {
+            category_id: validateBill.data.category,
+            user_id: validateBill.data.payer,      
+            amount: validateBill.data.amount,
+            date_of_payment: validateBill.data.date_of_payment,
+          };
+
+          return await db.insert(billModel).values(dbBill);
+        } catch (error:any) {
         console.error('Error processing bill:', error);
         throw new Error(`Error processing bill: ${error.message}`);
     }
@@ -89,11 +95,7 @@ const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
         if(lines.length < 15 || lines.length > 15)
             console.error('Number of lines is not 14 - PDF417')
 
-        const payeeName = lines[6];
-        const categoryFound = findCategory(payeeName);
-
         const bill: PDF417UploadedDto = {
-            category: categoryFound,
             amount: parseInt(lines[2], 10) / 100,
             date_of_payment: new Date()
           };
@@ -106,20 +108,11 @@ const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
     }
 }
 
-const findCategory = (category:string): string | null => {
-    if (Object.values(Bill_Payment_Payee).includes(category as Bill_Payment_Payee)) {
-        const indexOfS = Object.values(ReceiptCategory).indexOf(ReceiptCategory.BILL_PAYMENT as unknown as ReceiptCategory);
-        const key = Object.keys(ReceiptCategory)[indexOfS];
-        return key;
-    }
-    return null;
-} 
-
 export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]> => {    
     const filters: SQL[] = [];
     let groupByDate: SQL | null = null;
     if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0) {
-        filters.push(inArray(billModel.category, filter.categories))
+        filters.push(inArray(billModel.category_id, filter.categories))
 
     if(filter.dateFrom)
         filters.push(gte(billModel.date_of_payment, new Date(filter.dateFrom)))
@@ -148,12 +141,12 @@ export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]
 
     const queryResult = await db.select({
         date: groupByDate,
-        category: billModel.category,
+        category: billModel.category_id,
         totalAmount: sql`SUM(${billModel.amount})`
-    }).from(billModel).where(and(...filters)).groupBy(groupByDate, billModel.category).orderBy(groupByDate);
+    }).from(billModel).where(and(...filters)).groupBy(groupByDate, billModel.category_id).orderBy(groupByDate);
 
     var finalResult: FilterResponseDto[] = queryResult.map(({ category, totalAmount, date }) => ({
-        category: ReceiptCategory[category as keyof typeof ReceiptCategory],
+        category: category as number,
         totalAmount: totalAmount as number,
         date: date as string,
     }));

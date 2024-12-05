@@ -44,7 +44,6 @@ const isTokenExpired = (token: string): boolean => {
 
 router.beforeEach((to, from, next) => {
   const token = Cookies.get('token') // Get token from cookies
-  console.log('token', token)
   if (to.meta.requiresAuth) {
     if (!token || isTokenExpired(token)) next({ name: 'login' })
     else next()

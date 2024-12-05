@@ -5,5 +5,5 @@ export interface CategoryResponseDto {
 
 export interface CategoryDto {
   id: string
-  category_name: string
+  name: string
 }

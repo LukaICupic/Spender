@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import router from '@/router'
+import { postRequest } from '@/utils'
 import { ref } from 'vue'
 import { VForm, VTextField } from 'vuetify/components'
 
@@ -19,20 +20,10 @@ const inputRules = (field: string) => [
 const handleLogin = async () => {
   try {
     if ((await form.value?.validate())?.valid) {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/login`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-          },
-          body: JSON.stringify({
-            userName: userName.value,
-            password: password.value,
-          }),
-        },
-      )
+      const response = await postRequest('/login', {
+        userName: userName.value,
+        password: password.value,
+      })
 
       var responseData = await response.json()
       if (!response.ok) serverError.value = responseData.error
@@ -64,7 +55,7 @@ const handleLogin = async () => {
           label="Username"
           placeholder="Username"
           type="text"
-          outlined
+          variant="outlined"
           class="mb-4"
           :rules="inputRules('Username')"
           :error-messages="serverError ? [''] : []"
@@ -75,7 +66,7 @@ const handleLogin = async () => {
           label="Password"
           placeholder="Password"
           type="text"
-          outlined
+          variant="outlined"
           class="mb-4"
           :rules="inputRules('Password')"
           :error-messages="serverError ? [serverError] : []"

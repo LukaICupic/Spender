@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { CategoryDto, CategoryResponseDto } from '@/dtos/category'
+import type { CategoryResponseDto } from '@/dtos/category'
+import { getRequest, postRequest } from '@/utils'
 import { onMounted, ref, watch, type PropType } from 'vue'
 
 const props = defineProps({
   foundCategory: {
-    type: [String, Array] as PropType<string | string[]>, // Explicitly define the type
+    type: [Number, Array] as PropType<number | number[]>, // Explicitly define the type
     default: null,
   },
   multiple: {
@@ -17,8 +18,11 @@ const props = defineProps({
   },
 })
 
-const categories = ref<{ text: string; value: string }[] | undefined>([])
-const selectedCategory = ref<string | string[]>(props.foundCategory || []) // Default to an array if `multiple` is true
+const serverError = ref<string | null>(null)
+const dialogActive = ref(false)
+const categoryName = ref<string | null>(null)
+const categories = ref<{ name: string; id: string }[] | undefined>([])
+const selectedCategory = ref<number | number[]>(props.foundCategory || [])
 const emit = defineEmits(['update:category'])
 const categoryRules = [
   (value: any) => {
@@ -53,26 +57,40 @@ watch(
 
 onMounted(async () => {
   try {
-    // categories.value = await getBillCategories()
     await getBillCategories()
   } catch (error) {
     console.error('Error fetching categories:', error)
   }
 })
 
-const getBillCategories = async (): Promise<CategoryDto[] | undefined> => {
+const getBillCategories = async () => {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/categories`,
-    )
-
-    console.log('categories response', await response.json())
-
+    const response = await getRequest('/categories')
     const responseData: CategoryResponseDto = await response.json()
-    return []
+
     if (responseData.error) {
-      return []
-    } else return responseData?.data ?? []
+      categories.value = []
+    } else categories.value = responseData?.data ?? []
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+  }
+}
+
+const handleSave = async () => {
+  try {
+    const response = await postRequest('/category-save', {
+      name: categoryName.value,
+    })
+
+    if (!response.ok) {
+      var responseData = await response.json()
+      serverError.value = responseData.error
+    } else {
+      serverError.value = null
+      categoryName.value = null
+      await getBillCategories()
+      dialogActive.value = false
+    }
   } catch (error) {
     console.error('Error fetching categories:', error)
   }
@@ -83,9 +101,38 @@ const getBillCategories = async (): Promise<CategoryDto[] | undefined> => {
     v-model="selectedCategory"
     :multiple="props.multiple"
     :items="categories"
+    class="mb-3"
+    variant="outlined"
+    density="compact"
     label="Category"
-    item-title="text"
-    item-value="value"
+    item-title="name"
+    item-value="id"
     :rules="categoryRules"
-  />
+  >
+    <template #prepend-item v-if="props.context === 'BillUpload'">
+      <v-btn
+        variant="text"
+        icon="mdi-plus-circle-outline"
+        @click="dialogActive = true"
+      ></v-btn>
+    </template>
+  </v-select>
+
+  <v-dialog v-model="dialogActive" max-width="500">
+    <v-card>
+      <v-card-text>
+        <v-text-field
+          v-model="categoryName"
+          label="Category name"
+          variant="underlined"
+          density="compact"
+          type="text"
+          :error-messages="serverError ? [serverError] : []"
+        />
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="secondary" text="Save" @click="handleSave"></v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>

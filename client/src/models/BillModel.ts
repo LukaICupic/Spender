@@ -1,5 +1,5 @@
 export interface BillModel {
-  category: string
+  category?: number
   amount: number
-  date: string
+  date: Date
 }

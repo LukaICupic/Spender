@@ -11,23 +11,24 @@ import CategorySelect from '@/components/CategorySelect.vue'
 import type { BillModel } from '@/models/BillModel'
 import { Vue3Lottie } from 'vue3-lottie'
 import PiggyAnimation from '@/assets/piggy.json'
+import { postRequest } from '@/utils'
 
 const bill = ref<BillModel>({
-  category: '',
+  category: undefined,
   amount: 0,
-  date: '',
+  date: new Date(),
 })
 const form = ref<VForm | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
 const fileUploadRef = ref<HTMLInputElement | null>(null)
 
-const message = ref<MessageDto>({
-  messageAlert: false,
-  messageContent: '',
-  messageType: 'error',
+const snackbar = ref({
+  visible: false,
+  content: '',
+  color: 'error', // Default color
 })
-const scanningMode = ref<boolean>(false)
 
+const scanningMode = ref<boolean>(false)
 const codeReader = new BrowserMultiFormatReader()
 
 //Rules
@@ -52,33 +53,26 @@ const dateRules = [
   },
 ]
 
+const showMessage = (content?: string, color: string = 'error') => {
+  snackbar.value.content = content ?? ''
+  snackbar.value.color = '#36c8c9'
+  snackbar.value.visible = true
+}
+
 //handlers
 const handleBillsSaving = async () => {
   if ((await form.value?.validate())?.valid) {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bill/save-bill`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify({
-          category: bill.value.category,
-          amount: bill.value.amount,
-          date: new Date(bill.value.date),
-        }),
-      },
-    )
+    const response = await postRequest('/save-bill', {
+      category: bill.value.category,
+      amount: bill.value.amount,
+      date: new Date(bill.value.date),
+    })
 
     const responseData: BillSaveResponseDto = await response.json()
-    message.value.messageAlert = true
     if (responseData.error) {
-      message.value.messageType = 'warning'
-      message.value.messageAlert = true
-      message.value.messageContent = `${responseData.error}`
+      showMessage(responseData.error, 'warning')
     } else {
-      message.value.messageType = 'success'
-      message.value.messageContent = `${responseData.message}`
+      showMessage(responseData.message, 'success')
 
       form.value?.reset()
     }
@@ -124,33 +118,18 @@ const processBillInfo = async (
   barcodeFormat: BarcodeFormat,
 ) => {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/bill/send-bill`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify({ content: decodedText, format: barcodeFormat }),
-      },
-    )
+    const response = await postRequest('/send-bill', {
+      content: decodedText,
+      format: barcodeFormat,
+    })
     var responseData: UploadBillResponseDto = await response.json()
     if (responseData.error) {
-      message.value.messageType = 'warning'
-      message.value.messageAlert = true
-      message.value.messageContent = `${responseData.error}`
+      showMessage(responseData.error, 'warning')
       return
     }
 
-    if (responseData.data?.category)
-      bill.value.category = responseData.data?.category
-
     bill.value.amount = responseData.data.amount
-
-    const formattedDate = new Date(responseData.data?.date_of_payment ?? '')
-      .toISOString()
-      .split('T')[0]
-    bill.value.date = formattedDate
+    bill.value.date = responseData.data.date_of_payment
   } catch (error) {
     console.error('Error sending data to backend:', error)
   }
@@ -196,27 +175,26 @@ const handleFileUpload = async () => {
 
 const triggerFileInput = () => {
   const fileInput = fileUploadRef.value
-  if (fileInput) fileInput.click() // Triggers the file input dialog
+  if (fileInput) fileInput.click()
 }
 </script>
 
 <template>
   <v-container class="container-wrapper">
-    <v-alert
-      shaped
-      outlined
-      :type="message.messageType"
-      v-if="message.messageAlert"
-      closable
-      @click:close="
-        () => {
-          message.messageAlert = false
-        }
-      "
-      class="alert"
+    <v-snackbar
+      v-model="snackbar.visible"
+      :color="snackbar.color"
+      timeout="1500"
+      location="top"
+      rounded
     >
-      {{ message.messageContent }}
-    </v-alert>
+      <div class="d-flex">
+        <v-icon icon="mdi-check-circle-outline" class="me-2" />
+        <div style="padding-top: 2px">
+          {{ snackbar.content }}
+        </div>
+      </div>
+    </v-snackbar>
 
     <v-row>
       <v-row class="d-flex justify-center mb-2 mt-2">
@@ -291,17 +269,16 @@ const triggerFileInput = () => {
             v-model.number="bill.amount"
             label="Amount"
             type="number"
-            outlined
-            dense
+            variant="outlined"
+            density="compact"
             :rules="amountRules"
           />
 
-          <v-text-field
+          <v-date-input
             v-model="bill.date"
             label="Date of Payment"
-            type="date"
-            outlined
-            dense
+            variant="outlined"
+            density="compact"
             :rules="dateRules"
           />
           <v-btn rounded block color="secondary" type="submit">Save</v-btn>
