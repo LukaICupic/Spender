@@ -16,7 +16,6 @@ export const loginUser = async(loginData:UserLoginDto) => {
 
         if(foundUser.length <= 0)
             throw new Error("Username or password is invalid.")
-        
         var isMatch = await bcrypt.compare(loginData.password, foundUser[0].password)
         if (!isMatch) throw new Error("Username or password is invalid.");
         

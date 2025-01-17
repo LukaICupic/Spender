@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/categories', validateToken, async (req:Request, res:Response<{data?:CategoryDto[], error?:string}>) => {
     try{
-        const categories = await getCategories();
+        const categories = await getCategories(req.userId);
         return res.status(200).json({ data:categories });
     }catch(error){
         res.status(500).json({ error: error instanceof  Error ? error.message :  'Internal Server Error' });

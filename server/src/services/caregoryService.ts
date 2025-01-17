@@ -4,10 +4,12 @@ import { CategoryDto, createCategory, CreateCategoryDto } from "../models/dtos/c
 import { SQL, and, gte, lte, inArray, eq} from "drizzle-orm";
 
 
-export const getCategories = async():Promise<CategoryDto[]> => {
+export const getCategories = async(userId:number):Promise<CategoryDto[]> => {
     try {
         var categories = await db.select().from(categoryModel)
-        console.log("found C", categories)
+        .where(
+            eq(categoryModel.user_id, userId));
+            
         const mappedCategories: CategoryDto[] = categories.map(category => ({
             id: category.id,
             name: category.name,

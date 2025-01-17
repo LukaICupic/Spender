@@ -2,7 +2,7 @@ import { BarcodeFormat, ReceiptCategory } from "../constants/Constants";
 import { CreateBillDto, createBill, PDF417UploadedDto, QRUploadedDto, UploadBillDto, uploaBill, BillsCategoryModel, FilterDto, RangeType, FilterResponseDto } from "../models/dtos/bill";
 import {db} from '../db/index';
 import {billModel} from '../db/schema';
-import { SQL, and, gte, lte, inArray, sql} from "drizzle-orm";
+import { SQL, and, gte, lte, inArray, sql, eq} from "drizzle-orm";
 
 export const saveBill = async(bill: Omit<CreateBillDto, 'payer'>, userId: number) => {
     try {
@@ -108,10 +108,11 @@ const handlePDF417Code = async(content:string): Promise<PDF417UploadedDto> => {
     }
 }
 
-export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]> => {    
+export const filterBills = async (filter:FilterDto, userId:number): Promise<FilterResponseDto[]> => { 
+    console.log("filter",filter)   
     const filters: SQL[] = [];
     let groupByDate: SQL | null = null;
-    if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0) {
+    if (filter.categories && Array.isArray(filter.categories) && filter.categories.length > 0)
         filters.push(inArray(billModel.category_id, filter.categories))
 
     if(filter.dateFrom)
@@ -119,7 +120,9 @@ export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]
     
     if(filter.dateTo)
         filters.push(lte(billModel.date_of_payment, new Date(filter.dateTo)))
-    }
+
+    if(userId)
+        filters.push(eq(billModel.user_id, userId))
 
     if(filter.rangeType && Object.values(RangeType).includes(filter.rangeType)){
         switch (filter.rangeType) {
@@ -143,13 +146,15 @@ export const filterBills = async (filter:FilterDto): Promise<FilterResponseDto[]
         date: groupByDate,
         category: billModel.category_id,
         totalAmount: sql`SUM(${billModel.amount})`
-    }).from(billModel).where(and(...filters)).groupBy(groupByDate, billModel.category_id).orderBy(groupByDate);
+    }).from(billModel).where(and(...filters)).groupBy(groupByDate, billModel.category_id, billModel.date_of_payment).orderBy(billModel.date_of_payment);
 
     var finalResult: FilterResponseDto[] = queryResult.map(({ category, totalAmount, date }) => ({
         category: category as number,
         totalAmount: totalAmount as number,
         date: date as string,
     }));
+
+    console.log("finalResult",finalResult)
 
     return finalResult;
 }
