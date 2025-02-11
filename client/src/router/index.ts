@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { jwtDecode } from 'jwt-decode'
-import Cookies from 'js-cookie'
+import { postRequest } from '@/utils'
 
 const routes = [
   {
@@ -31,23 +30,24 @@ const router = createRouter({
   routes,
 })
 
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const decoded: { exp: number } = jwtDecode(token)
-    const currentTime = Math.floor(Date.now() / 1000)
-    return decoded.exp < currentTime
-  } catch (error) {
-    console.error('Error decoding JWT token:', error)
-    return true
-  }
-}
-
-router.beforeEach((to, from, next) => {
-  const token = Cookies.get('token') // Get token from cookies
+//TODO - rather than going to BE to verify every time, firs look in the cache.
+//If none then BE and if there is session on BE then return it and store in cache
+router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
-    if (!token || isTokenExpired(token)) next({ name: 'login' })
-    else next()
-  } else next()
+    try {
+      const response = await postRequest('/verify-session', {})
+      if (response.ok) {
+        next()
+      } else {
+        next({ name: 'login' })
+      }
+    } catch (error) {
+      console.error('Error verifying session:', error)
+      next({ name: 'login' })
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

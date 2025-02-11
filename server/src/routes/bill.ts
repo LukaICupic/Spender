@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express';
 import { saveBill, uploadBill, filterBills } from '../services/billService';
 import { BillSavedDto, BillsCategoryModel, CreateBillDto, FilterDto, FilterResponseDto, PDF417UploadedDto, QRUploadedDto, UploadBillDto } from '../models/dtos/bill';
-import { validateToken } from '../services/userService';
+import { validateSession } from '../services/userService';
 
 const router = express.Router();
 
 //Get bills
-router.post('/save-bill', validateToken, async(req:Request<{},{},CreateBillDto>, res:Response<BillSavedDto>) => {
+router.post('/save-bill', validateSession, async(req:Request<{},{},CreateBillDto>, res:Response<BillSavedDto>) => {
     try {
         await saveBill(req.body, req.userId);
         res.status(200).json({message:'Bill saved successfully'});
@@ -16,7 +16,7 @@ router.post('/save-bill', validateToken, async(req:Request<{},{},CreateBillDto>,
     }
 })
 
-router.post('/send-bill', validateToken, async(req:Request<{},{},UploadBillDto>, res:Response<{data?:QRUploadedDto | PDF417UploadedDto, error?:string}>) => {
+router.post('/send-bill', validateSession, async(req:Request<{},{},UploadBillDto>, res:Response<{data?:QRUploadedDto | PDF417UploadedDto, error?:string}>) => {
     try {
         const billData = await uploadBill(req.body);
         res.status(200).json({ data: billData });
@@ -25,7 +25,7 @@ router.post('/send-bill', validateToken, async(req:Request<{},{},UploadBillDto>,
     }
 })
 
-router.post('/filter-bills', validateToken, async(req:Request<{},{},FilterDto>, res:Response<{data?:FilterResponseDto[], error?:string}>) => {
+router.post('/filter-bills', validateSession, async(req:Request<{},{},FilterDto>, res:Response<{data?:FilterResponseDto[], error?:string}>) => {
     try {
         var filteredData = await filterBills(req.body, req.userId);
         return res.status(200).json({ data: filteredData });

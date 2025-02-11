@@ -1,5 +1,5 @@
-import { relations } from "drizzle-orm";
-import { integer, pgTable, timestamp, varchar, real } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { integer, pgTable, timestamp, varchar, real, uuid } from "drizzle-orm/pg-core";
 
 export const billModel = pgTable("bill", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(), 
@@ -14,7 +14,7 @@ export const billModel = pgTable("bill", {
 });
 
 export const userModel = pgTable("user", {
-  id: integer().primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_name: varchar({ length: 255 }).notNull(),
   password: varchar({ length: 255 }).notNull()
 })
@@ -26,6 +26,13 @@ export const categoryModel = pgTable("category", {
     .references(() => userModel.id)
     .notNull(),
 });
+
+export const sessionModel = pgTable("session", {
+  session_id: uuid().notNull().primaryKey(),
+  user_id: integer().notNull(),
+  created_at: timestamp().default(sql`now()`),
+  expires_at: timestamp().notNull()
+})
 
 export const billRelations = relations(billModel, ({ one }) => ({
   user: one(userModel),

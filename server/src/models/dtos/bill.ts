@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { ReceiptCategory } from "../../constants/Constants";
 
   export interface FilterResponseDto {
     category: number;

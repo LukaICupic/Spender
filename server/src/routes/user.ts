@@ -1,16 +1,16 @@
 
 import express, { Request, Response } from 'express';
-import { loginUser } from '../services/userService';
+import { loginUser, validateSession } from '../services/userService';
 import { UserLoginResponse, UserLoginDto } from '../models/dtos/user';
 
 const router = express.Router();
 
 router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserLoginResponse, error?:string}>) => {
     try {
-        const userData = await loginUser(req.body);
+        const sessionId = await loginUser(req.body);
         
-        res.cookie('token', userData, {
-            httpOnly:false,
+        res.cookie('sessionId', sessionId, {
+            httpOnly:true,
             secure: process.env.NODE_ENV === 'PRODUCTION',
             maxAge: 48 * 60 * 60 * 1000,
             sameSite: 'lax'
@@ -21,5 +21,10 @@ router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserL
         res.status(500).json({ error: error instanceof  Error ? error.message :  'Internal Server Error' });
     }
 })
+
+router.post('/verify-session', validateSession, async(req:Request, res:Response) => {
+    res.status(200).json({ success: true, message: "Session is valid" });
+})
+
 
 export default router;
