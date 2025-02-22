@@ -65,7 +65,7 @@ const handleBillsSaving = async () => {
     const response = await postRequest('/save-bill', {
       category: bill.value.category,
       amount: bill.value.amount,
-      date: new Date(bill.value.date),
+      date: bill.value.date,
     })
 
     const responseData: BillSaveResponseDto = await response.json()

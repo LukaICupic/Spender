@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import CategorySelect from '@/components/CategorySelect.vue'
 import type { VForm } from 'vuetify/components'
 import type { ChartData } from '@/dtos/bills'
@@ -14,7 +14,7 @@ import {
   BarController,
   type ChartType,
 } from 'chart.js'
-import { postRequest } from '@/utils'
+import { postRequest, stringToColorRgbaCode } from '@/utils'
 
 ChartJS.register(
   Title,
@@ -31,7 +31,7 @@ const chartInstance = ref<ChartJS | null>(null)
 
 const form = ref<VForm | null>(null)
 const dateFrom = ref<string>(
-  new Date(new Date().setDate(new Date().getDate() - 7))
+  new Date(new Date().setFullYear(new Date().getFullYear() - 1))
     .toISOString()
     .split('T')[0],
 )
@@ -43,14 +43,6 @@ const chartData = ref<ChartData>({
   labels: [],
   datasets: [],
 })
-const categoryColors: { [key: string]: string } = {
-  Nabavka: 'rgba(75, 192, 192, 0.5)',
-  Režije: 'rgba(255, 99, 132, 0.5)',
-  Transport: 'rgba(54, 162, 235, 0.5)',
-  'Osobna njega': 'rgba(153, 102, 255, 0.5)',
-  Zabava: 'rgba(255, 206, 86, 0.5)',
-  Ostalo: 'rgba(201, 203, 207, 0.5)',
-}
 
 let config = {
   type: 'bar' as ChartType,
@@ -80,22 +72,22 @@ let config = {
 
 const rangeRules = [
   (value: string) => {
-    if (value === undefined || value === null || value === '') {
+    if (value === undefined || value === null || value === '')
       return 'Range is required.'
-    }
+
     return true
   },
 ]
 
 const dateRules = [
   (value: string) => {
-    if (value === undefined || value === null || value === '') {
+    if (value === undefined || value === null || value === '')
       return 'Date is required.'
-    }
+
     var convertDate = new Date(value).getFullYear()
-    if (convertDate < 2024 || convertDate > new Date().getFullYear()) {
+    if (convertDate < 2024 || convertDate > new Date().getFullYear())
       return 'The year spans from 2024 until the current year'
-    }
+
     return true
   },
 ]
@@ -120,7 +112,6 @@ const handleStatsData = async () => {
         categories: selectedCategories.value,
         rangeType: selectedRange.value,
       })
-
       var result = await response.json()
 
       //Creating unique array of dates
@@ -130,19 +121,20 @@ const handleStatsData = async () => {
 
       const datasets = result.data.reduce((acc: any, ele: any) => {
         //If category does not exist on the empty object, add it as the key and populate with initial data
-        if (!acc[ele.category]) {
-          acc[ele.category] = {
-            label: ele.category,
+        if (!acc[ele.categoryId]) {
+          acc[ele.categoryId] = {
+            label: ele.categoryName,
             data: new Array(labels.length).fill(0), // Initialize with zeros
             backgroundColor:
-              categoryColors[ele.category] || 'rgba(75, 192, 192, 0.2)',
+              stringToColorRgbaCode(ele.categoryName) ||
+              'rgba(75, 192, 192, 0.2)',
           }
         }
 
         //Get index of label array element and insert in the same place in "data" the amount of
         const dateIndex = labels.indexOf(ele.date)
         if (dateIndex !== -1) {
-          acc[ele.category].data[dateIndex] = ele.totalAmount // Update with totalAmount
+          acc[ele.categoryId].data[dateIndex] = ele.totalAmount // Update with totalAmount
         }
 
         return acc

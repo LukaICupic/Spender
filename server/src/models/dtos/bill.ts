@@ -1,7 +1,8 @@
 import { z } from "zod";
 
   export interface FilterResponseDto {
-    category: number;
+    categoryId: number;
+    categoryName: string;
     date: string;
     totalAmount: number;
   }

@@ -10,7 +10,7 @@ export const billModel = pgTable("bill", {
     .references(() => userModel.id)
     .notNull(),
   amount: real().notNull(),
-  date_of_payment: timestamp().notNull(),
+  date_of_payment: timestamp({withTimezone:true}).notNull(),
 });
 
 export const userModel = pgTable("user", {
