@@ -5,7 +5,7 @@ import { UserLoginResponse, UserLoginDto } from '../models/dtos/user';
 
 const router = express.Router();
 
-router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserLoginResponse, error?:string}>) => {
+router.post('/api/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserLoginResponse, error?:string}>) => {
     try {
         const sessionId = await loginUser(req.body);
         
@@ -22,7 +22,7 @@ router.post('/login', async(req:Request<UserLoginDto>, res:Response<{data?:UserL
     }
 })
 
-router.post('/verify-session', validateSession, async(req:Request, res:Response) => {
+router.post('/api/verify-session', validateSession, async(req:Request, res:Response) => {
     res.status(200).json({ success: true, message: "Session is valid" });
 })
 

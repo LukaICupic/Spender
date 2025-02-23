@@ -1,5 +1,5 @@
 export const postRequest = async (url: string, body: object) => {
-  return await fetch(`${import.meta.env.VITE_API_BASE_URL}${url}`, {
+  return await fetch(`/api${url}`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -10,7 +10,7 @@ export const postRequest = async (url: string, body: object) => {
 }
 
 export const getRequest = async (url: string) => {
-  return await fetch(`${import.meta.env.VITE_API_BASE_URL}${url}`, {
+  return await fetch(`/api${url}`, {
     method: 'GET',
     credentials: 'include',
     headers: {

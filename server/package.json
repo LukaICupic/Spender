@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node --files src/app.ts",
+    "migrate": "drizzle-kit generate --dialect postgresql --schema ./src/db/schema.ts --out ./src/db/migrations",
     "drizzle-push": "npx drizzle-kit push --config=./src/drizzle.config.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch --tsconfig tsconfig.json src/app.ts",
+    "build": "tsc -p tsconfig.json --outDir dist",
+    "check": "tsc -p tsconfig.json --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -20,8 +23,7 @@
     "@types/node": "^22.7.5",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.25.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.19.1",
+    "tsx": "^4.19.3",
     "typescript": "^5.6.3"
   },
   "dependencies": {
